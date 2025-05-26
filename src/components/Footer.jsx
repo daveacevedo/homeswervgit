@@ -1,77 +1,19 @@
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-function Footer() {
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4">ServiceConnect Pro</h3>
-            <p className="text-gray-300">
+          <div className="col-span-1 md:col-span-1">
+            <h3 className="text-lg font-semibold mb-4">ServiceConnect Pro</h3>
+            <p className="text-gray-300 text-sm">
               Connecting homeowners with trusted service providers since 2023.
             </p>
-          </div>
-          
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/" className="text-gray-300 hover:text-white">Home</Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-gray-300 hover:text-white">About Us</Link>
-              </li>
-              <li>
-                <a href="#services" className="text-gray-300 hover:text-white">Services</a>
-              </li>
-              <li>
-                <Link to="/provider-register" className="text-gray-300 hover:text-white">Become a Provider</Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Service Categories</h4>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white">Plumbing</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white">Electrical</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white">HVAC</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white">Landscaping</a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white">Cleaning</a>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
-            <address className="not-italic text-gray-300">
-              <p>123 Service Street</p>
-              <p>Anytown, ST 12345</p>
-              <p className="mt-2">
-                <a href="mailto:info@serviceconnectpro.com" className="hover:text-white">info@serviceconnectpro.com</a>
-              </p>
-              <p>
-                <a href="tel:+15551234567" className="hover:text-white">(555) 123-4567</a>
-              </p>
-            </address>
-          </div>
-        </div>
-        
-        <div className="mt-8 pt-8 border-t border-gray-700">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-300">
-              &copy; {new Date().getFullYear()} ServiceConnect Pro. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="mt-4 flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">Facebook</span>
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -92,10 +34,95 @@ function Footer() {
               </a>
             </div>
           </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">For Homeowners</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/homeowner/dashboard" className="text-gray-300 hover:text-white text-sm">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/homeowner/projects" className="text-gray-300 hover:text-white text-sm">
+                  My Projects
+                </Link>
+              </li>
+              <li>
+                <Link to="/homeowner/providers" className="text-gray-300 hover:text-white text-sm">
+                  Find Providers
+                </Link>
+              </li>
+              <li>
+                <Link to="/community" className="text-gray-300 hover:text-white text-sm">
+                  Community Hub
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">For Providers</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/provider/dashboard" className="text-gray-300 hover:text-white text-sm">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/provider/jobs" className="text-gray-300 hover:text-white text-sm">
+                  Available Jobs
+                </Link>
+              </li>
+              <li>
+                <Link to="/provider/profile" className="text-gray-300 hover:text-white text-sm">
+                  Business Profile
+                </Link>
+              </li>
+              <li>
+                <Link to="/provider/calendar" className="text-gray-300 hover:text-white text-sm">
+                  Calendar
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/about" className="text-gray-300 hover:text-white text-sm">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-300 hover:text-white text-sm">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="text-gray-300 hover:text-white text-sm">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white text-sm">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white text-sm">
+                  Terms of Service
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-8 pt-8 border-t border-gray-700">
+          <p className="text-gray-400 text-sm text-center">
+            &copy; {currentYear} ServiceConnect Pro. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

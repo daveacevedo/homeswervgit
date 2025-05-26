@@ -1,125 +1,209 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-function ProjectDetails() {
+const ProjectDetails = () => {
   const { id } = useParams();
-  const [comment, setComment] = useState('');
-  
-  // Sample project data - in a real app, this would come from an API call
-  const project = {
-    id: parseInt(id),
-    title: 'Modern Kitchen Renovation',
-    description: 'Complete kitchen remodel with custom cabinets and marble countertops. This project took 6 weeks to complete and transformed our outdated kitchen into a modern cooking space that's perfect for entertaining.',
-    images: [
-      'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      'https://images.pexels.com/photos/3214064/pexels-photo-3214064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      'https://images.pexels.com/photos/3926544/pexels-photo-3926544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    ],
-    author: {
-      name: 'Sarah Johnson',
-      avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      projects: 8,
-    },
-    details: {
-      budget: '$25,000',
-      duration: '6 weeks',
-      completionDate: 'March 15, 2023',
-      location: 'Seattle, WA',
-    },
-    materials: [
-      'Custom maple cabinets',
-      'Carrara marble countertops',
-      'Subway tile backsplash',
-      'Stainless steel appliances',
-      'Hardwood flooring',
-      'LED recessed lighting',
-    ],
-    steps: [
-      {
-        title: 'Planning and Design',
-        description: 'Worked with a kitchen designer to create the layout and select materials.',
-      },
-      {
-        title: 'Demolition',
-        description: 'Removed old cabinets, countertops, and flooring.',
-      },
-      {
-        title: 'Plumbing and Electrical',
-        description: 'Updated plumbing for the sink and dishwasher. Added new electrical for lighting and appliances.',
-      },
-      {
-        title: 'Cabinet Installation',
-        description: 'Installed custom cabinets and added soft-close hardware.',
-      },
-      {
-        title: 'Countertops and Backsplash',
-        description: 'Installed marble countertops and subway tile backsplash.',
-      },
-      {
-        title: 'Finishing Touches',
-        description: 'Installed new appliances, lighting, and hardware.',
-      },
-    ],
-    tips: [
-      'Always add 20% to your budget for unexpected expenses',
-      'Choose materials that are both beautiful and functional',
-      'Consider the workflow when designing your layout',
-      'Invest in quality appliances that will last',
-    ],
-    comments: [
-      {
-        id: 1,
-        author: 'Michael Rodriguez',
-        avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-        text: 'This looks amazing! I love the marble countertops. How are they holding up with stains?',
-        date: '2 days ago',
-      },
-      {
-        id: 2,
-        author: 'Emily Chen',
-        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-        text: 'Beautiful transformation! Did you have any issues with the cabinet delivery timeline?',
-        date: '1 week ago',
-      },
-    ],
-    likes: 245,
-    saves: 128,
-    views: 1892,
-    tags: ['Kitchen', 'Renovation', 'Modern', 'Marble', 'Custom Cabinets'],
-    providers: [
-      {
-        name: 'Elite Cabinets',
-        service: 'Cabinet Installation',
-        rating: 4.9,
-      },
-      {
-        name: 'Stone Masters',
-        service: 'Countertop Installation',
-        rating: 4.8,
-      },
-    ],
-  };
-  
+  const { user } = useAuth();
+  const [project, setProject] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [commentText, setCommentText] = useState('');
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        setLoading(true);
+        
+        // This would be replaced with actual data fetching from Supabase
+        // For now, we'll use mock data
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock project data
+        setProject({
+          id: parseInt(id),
+          title: 'Modern Kitchen Renovation',
+          description: 'Complete kitchen remodel with custom cabinets and quartz countertops.',
+          longDescription: `
+            Our kitchen was outdated and inefficient, so we decided to completely renovate it. We worked with a local contractor to design a modern, functional space that would be perfect for cooking and entertaining.
+            
+            The renovation included:
+            - Custom maple cabinets with soft-close drawers
+            - Quartz countertops in a marble-look finish
+            - New stainless steel appliances
+            - Porcelain tile flooring
+            - Under-cabinet lighting
+            - New plumbing fixtures
+            
+            The project took about 8 weeks to complete and cost approximately $35,000. We're thrilled with the results and have received many compliments from friends and family.
+          `,
+          category: 'kitchen',
+          images: [
+            'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            'https://images.pexels.com/photos/3214064/pexels-photo-3214064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            'https://images.pexels.com/photos/3926542/pexels-photo-3926542.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            'https://images.pexels.com/photos/6207014/pexels-photo-6207014.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+          ],
+          author: 'John Smith',
+          authorImage: null,
+          likes: 42,
+          comments: 12,
+          date: '2023-11-15',
+          duration: '8 weeks',
+          cost: '$35,000',
+          provider: 'ABC Contractors',
+          materials: [
+            'Maple cabinets',
+            'Quartz countertops',
+            'Stainless steel appliances',
+            'Porcelain tile flooring',
+            'LED lighting'
+          ],
+          steps: [
+            {
+              title: 'Planning and Design',
+              description: 'Worked with a kitchen designer to create the layout and select materials.'
+            },
+            {
+              title: 'Demolition',
+              description: 'Removed all existing cabinets, countertops, flooring, and appliances.'
+            },
+            {
+              title: 'Plumbing and Electrical',
+              description: 'Updated plumbing and electrical to accommodate the new layout.'
+            },
+            {
+              title: 'Cabinets and Countertops',
+              description: 'Installed custom cabinets and quartz countertops.'
+            },
+            {
+              title: 'Flooring',
+              description: 'Installed new porcelain tile flooring.'
+            },
+            {
+              title: 'Appliances and Fixtures',
+              description: 'Installed new appliances, sink, and faucet.'
+            },
+            {
+              title: 'Finishing Touches',
+              description: 'Added backsplash, lighting, and hardware.'
+            }
+          ]
+        });
+        
+        // Mock comments
+        setComments([
+          {
+            id: 1,
+            author: 'Sarah Johnson',
+            authorImage: null,
+            text: 'This looks amazing! I love the quartz countertops. Did you consider any other materials?',
+            date: '2023-11-16',
+            likes: 5
+          },
+          {
+            id: 2,
+            author: 'Michael Brown',
+            authorImage: null,
+            text: 'Great job! How did you find your contractor? I\'m looking to do a similar renovation.',
+            date: '2023-11-17',
+            likes: 3
+          },
+          {
+            id: 3,
+            author: 'Emily Davis',
+            authorImage: null,
+            text: 'The lighting makes such a difference. Beautiful work!',
+            date: '2023-11-18',
+            likes: 2
+          }
+        ]);
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProjectData();
+  }, [id]);
+
   const handleCommentSubmit = (e) => {
     e.preventDefault();
-    // In a real app, this would send the comment to an API
-    alert('Comment submitted: ' + comment);
-    setComment('');
+    
+    if (!commentText.trim()) return;
+    
+    // In a real app, this would send the comment to the database
+    const newComment = {
+      id: comments.length + 1,
+      author: user?.email?.split('@')[0] || 'Anonymous',
+      authorImage: null,
+      text: commentText,
+      date: new Date().toISOString().split('T')[0],
+      likes: 0
+    };
+    
+    setComments([newComment, ...comments]);
+    setCommentText('');
   };
-  
+
+  const toggleLike = () => {
+    setLiked(!liked);
+    // In a real app, this would update the like count in the database
+  };
+
+  const toggleSave = () => {
+    setSaved(!saved);
+    // In a real app, this would save the project to the user's saved projects
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-12 h-12 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Project Not Found
+            </h1>
+            <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+              The project you're looking for doesn't exist or has been removed.
+            </p>
+            <div className="mt-6">
+              <Link
+                to="/community"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Back to Community Hub
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white">
+    <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex py-4" aria-label="Breadcrumb">
+        <nav className="flex" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-4">
             <li>
               <div>
-                <Link to="/" className="text-gray-400 hover:text-gray-500">
-                  <svg className="flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                  </svg>
-                  <span className="sr-only">Home</span>
+                <Link to="/community" className="text-gray-400 hover:text-gray-500">
+                  Community Hub
                 </Link>
               </div>
             </li>
@@ -128,102 +212,120 @@ function ProjectDetails() {
                 <svg className="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
                 </svg>
-                <Link to="/community" className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">Community</Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-                </svg>
-                <span className="ml-4 text-sm font-medium text-gray-500" aria-current="page">{project.title}</span>
+                <span className="ml-4 text-gray-500" aria-current="page">
+                  {project.title}
+                </span>
               </div>
             </li>
           </ol>
         </nav>
         
-        {/* Project header */}
-        <div className="border-b border-gray-200 pb-10">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">{project.title}</h1>
-          <div className="mt-4 flex items-center">
+        {/* Project Header */}
+        <div className="mt-6">
+          <div className="md:flex md:items-center md:justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                {project.title}
+              </h1>
+            </div>
+            <div className="mt-4 flex md:mt-0 md:ml-4 space-x-2">
+              <button
+                type="button"
+                onClick={toggleLike}
+                className={`inline-flex items-center px-4 py-2 border ${
+                  liked ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                } rounded-md shadow-sm text-sm font-medium ${
+                  liked ? 'text-red-700' : 'text-gray-700'
+                } hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
+              >
+                <svg className={`-ml-1 mr-2 h-5 w-5 ${liked ? 'text-red-500' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                </svg>
+                {liked ? 'Liked' : 'Like'}
+              </button>
+              <button
+                type="button"
+                onClick={toggleSave}
+                className={`inline-flex items-center px-4 py-2 border ${
+                  saved ? 'border-primary-300 bg-primary-50' : 'border-gray-300 bg-white'
+                } rounded-md shadow-sm text-sm font-medium ${
+                  saved ? 'text-primary-700' : 'text-gray-700'
+                } hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
+              >
+                <svg className={`-ml-1 mr-2 h-5 w-5 ${saved ? 'text-primary-500' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                </svg>
+                {saved ? 'Saved' : 'Save'}
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center">
             <div className="flex-shrink-0">
-              <img className="h-10 w-10 rounded-full" src={project.author.avatar} alt={project.author.name} />
+              <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
+                {project.author.charAt(0)}
+              </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{project.author.name}</p>
-              <p className="text-sm text-gray-500">{project.author.projects} projects</p>
-            </div>
-            <div className="ml-auto flex space-x-4">
-              <button type="button" className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                Like ({project.likes})
-              </button>
-              <button type="button" className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                Save ({project.saves})
-              </button>
-              <button type="button" className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share
-              </button>
+              <p className="text-sm font-medium text-gray-900">{project.author}</p>
+              <div className="flex space-x-1 text-sm text-gray-500">
+                <time dateTime={project.date}>{new Date(project.date).toLocaleDateString()}</time>
+                <span aria-hidden="true">&middot;</span>
+                <span>{project.category.charAt(0).toUpperCase() + project.category.slice(1)}</span>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Project content */}
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Main content */}
-          <div className="lg:col-span-2">
-            {/* Image gallery */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="col-span-2">
-                <img src={project.images[0]} alt={project.title} className="w-full h-96 object-cover rounded-lg" />
+        {/* Project Images */}
+        <div className="mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <img 
+                src={project.images[0]} 
+                alt={project.title} 
+                className="w-full h-96 object-cover rounded-lg shadow-md"
+              />
+            </div>
+            {project.images.slice(1).map((image, index) => (
+              <div key={index}>
+                <img 
+                  src={image} 
+                  alt={`${project.title} ${index + 2}`} 
+                  className="w-full h-64 object-cover rounded-lg shadow-md"
+                />
               </div>
-              <div>
-                <img src={project.images[1]} alt={project.title} className="w-full h-64 object-cover rounded-lg" />
+            ))}
+          </div>
+        </div>
+        
+        {/* Project Details */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium text-gray-900">Project Description</h2>
               </div>
-              <div>
-                <img src={project.images[2]} alt={project.title} className="w-full h-64 object-cover rounded-lg" />
+              <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <p className="text-gray-700 whitespace-pre-line">{project.longDescription}</p>
               </div>
             </div>
             
-            {/* Description */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900">Description</h2>
-              <div className="mt-4 text-gray-700">
-                <p>{project.description}</p>
+            {/* Project Steps */}
+            <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium text-gray-900">Project Steps</h2>
               </div>
-            </div>
-            
-            {/* Steps */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900">Project Steps</h2>
-              <div className="mt-4 flow-root">
-                <ul className="-mb-8">
-                  {project.steps.map((step, stepIdx) => (
-                    <li key={step.title}>
-                      <div className="relative pb-8">
-                        {stepIdx !== project.steps.length - 1 ? (
-                          <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
-                        ) : null}
-                        <div className="relative flex space-x-3">
-                          <div>
-                            <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                              <span className="text-white font-medium">{stepIdx + 1}</span>
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                            <div>
-                              <p className="text-lg font-medium text-gray-900">{step.title}</p>
-                              <p className="mt-1 text-gray-500">{step.description}</p>
-                            </div>
-                          </div>
+              <div className="border-t border-gray-200">
+                <ul className="divide-y divide-gray-200">
+                  {project.steps.map((step, index) => (
+                    <li key={index} className="px-4 py-4 sm:px-6">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 bg-primary-100 rounded-full h-8 w-8 flex items-center justify-center text-primary-700 font-medium">
+                          {index + 1}
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-medium text-gray-900">{step.title}</h3>
+                          <p className="mt-1 text-gray-600">{step.description}</p>
                         </div>
                       </div>
                     </li>
@@ -232,194 +334,194 @@ function ProjectDetails() {
               </div>
             </div>
             
-            {/* Materials */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900">Materials Used</h2>
-              <div className="mt-4">
-                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {project.materials.map((material) => (
-                    <li key={material} className="flex items-start">
-                      <svg className="flex-shrink-0 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="ml-2 text-gray-700">{material}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Comments Section */}
+            <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium text-gray-900">Comments ({comments.length})</h2>
               </div>
-            </div>
-            
-            {/* Tips */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900">Pro Tips</h2>
-              <div className="mt-4 bg-blue-50 p-4 rounded-lg">
-                <ul className="space-y-2">
-                  {project.tips.map((tip) => (
-                    <li key={tip} className="flex items-start">
-                      <svg className="flex-shrink-0 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      <span className="ml-2 text-gray-700">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            {/* Comments */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
-              <div className="mt-4 space-y-6">
-                {project.comments.map((comment) => (
-                  <div key={comment.id} className="flex space-x-4">
-                    <div className="flex-shrink-0">
-                      <img className="h-10 w-10 rounded-full" src={comment.avatar} alt={comment.author} />
+              <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                {user ? (
+                  <form onSubmit={handleCommentSubmit} className="mb-6">
+                    <div>
+                      <label htmlFor="comment" className="sr-only">Comment</label>
+                      <textarea
+                        id="comment"
+                        name="comment"
+                        rows={3}
+                        className="shadow-sm block w-full focus:ring-primary-500 focus:border-primary-500 sm:text-sm border border-gray-300 rounded-md"
+                        placeholder="Add a comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                      />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{comment.author}</p>
-                      <p className="text-sm text-gray-500">{comment.date}</p>
-                      <div className="mt-1 text-gray-700">{comment.text}</div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="submit"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      >
+                        Post Comment
+                      </button>
                     </div>
+                  </form>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-md mb-6">
+                    <p className="text-sm text-gray-700">
+                      <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+                        Sign in
+                      </Link> to leave a comment.
+                    </p>
                   </div>
-                ))}
-              </div>
-              
-              {/* Add comment form */}
-              <div className="mt-6">
-                <form onSubmit={handleCommentSubmit} className="relative">
-                  <div className="border border-gray-300 rounded-lg shadow-sm overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-                    <label htmlFor="comment" className="sr-only">Add your comment</label>
-                    <textarea
-                      rows={3}
-                      name="comment"
-                      id="comment"
-                      className="block w-full py-3 border-0 resize-none focus:ring-0 sm:text-sm"
-                      placeholder="Add your comment..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <div className="py-2 px-3 border-t border-gray-200">
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          Post Comment
-                        </button>
+                )}
+                
+                <div className="space-y-6">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
+                          {comment.author.charAt(0)}
+                        </div>
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg px-4 py-2 sm:px-6 sm:py-4">
+                        <div className="sm:flex sm:justify-between sm:items-baseline">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {comment.author}
+                            </p>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500 sm:mt-0">
+                            {new Date(comment.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-700">
+                          <p>{comment.text}</p>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 flex items-center">
+                          <button className="flex items-center text-gray-500 hover:text-gray-700">
+                            <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                            </svg>
+                            {comment.likes} likes
+                          </button>
+                          <span className="mx-2">&middot;</span>
+                          <button className="text-gray-500 hover:text-gray-700">Reply</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </form>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
           
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            {/* Project details */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900">Project Details</h3>
-              <dl className="mt-4 space-y-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Budget</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.details.budget}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Duration</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.details.duration}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Completion Date</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.details.completionDate}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Location</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.details.location}</dd>
-                </div>
-              </dl>
-            </div>
-            
-            {/* Tags */}
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-900">Tags</h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
-                    {tag}
-                  </span>
-                ))}
+          {/* Project Sidebar */}
+          <div>
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium text-gray-900">Project Details</h2>
+              </div>
+              <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Duration</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{project.duration}</dd>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Cost</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{project.cost}</dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-sm font-medium text-gray-500">Service Provider</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{project.provider}</dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-sm font-medium text-gray-500">Materials Used</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                        {project.materials.map((material, index) => (
+                          <li key={index} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
+                            <div className="w-0 flex-1 flex items-center">
+                              <svg className="flex-shrink-0 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                              </svg>
+                              <span className="ml-2 flex-1 w-0 truncate">
+                                {material}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
             
-            {/* Service providers */}
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-900">Service Providers Used</h3>
-              <ul className="mt-4 space-y-4">
-                {project.providers.map((provider) => (
-                  <li key={provider.name} className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="flex justify-between">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900">{provider.name}</h4>
-                        <p className="mt-1 text-sm text-gray-500">{provider.service}</p>
+            {/* Similar Projects */}
+            <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium text-gray-900">Similar Projects</h2>
+              </div>
+              <div className="border-t border-gray-200">
+                <div className="divide-y divide-gray-200">
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
+                        <img 
+                          src="https://images.pexels.com/photos/3214064/pexels-photo-3214064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                          alt="Modern Kitchen Design" 
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                      <div className="flex items-center">
-                        <svg className="text-yellow-400 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="ml-1 text-sm text-gray-500">{provider.rating}</span>
+                      <div className="ml-4">
+                        <h3 className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                          <Link to="/community/project/2">Modern Kitchen Design</Link>
+                        </h3>
+                        <p className="text-xs text-gray-500">By Alex Johnson</p>
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                        View Profile
-                      </a>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {/* Similar projects */}
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-900">Similar Projects</h3>
-              <ul className="mt-4 space-y-4">
-                <li className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex space-x-4">
-                    <img src="https://images.pexels.com/photos/3214064/pexels-photo-3214064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" className="h-16 w-16 object-cover rounded" />
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Farmhouse Kitchen Renovation</h4>
-                      <p className="mt-1 text-sm text-gray-500">By Jessica Martinez</p>
+                  </div>
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
+                        <img 
+                          src="https://images.pexels.com/photos/6207014/pexels-photo-6207014.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                          alt="Kitchen Island Upgrade" 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                          <Link to="/community/project/3">Kitchen Island Upgrade</Link>
+                        </h3>
+                        <p className="text-xs text-gray-500">By Maria Garcia</p>
+                      </div>
                     </div>
                   </div>
-                </li>
-                <li className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex space-x-4">
-                    <img src="https://images.pexels.com/photos/2062426/pexels-photo-2062426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" className="h-16 w-16 object-cover rounded" />
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Minimalist Kitchen Makeover</h4>
-                      <p className="mt-1 text-sm text-gray-500">By David Wilson</p>
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
+                        <img 
+                          src="https://images.pexels.com/photos/3926542/pexels-photo-3926542.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                          alt="Budget Kitchen Refresh" 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                          <Link to="/community/project/4">Budget Kitchen Refresh</Link>
+                        </h3>
+                        <p className="text-xs text-gray-500">By David Wilson</p>
+                      </div>
                     </div>
                   </div>
-                </li>
-                <li className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="flex space-x-4">
-                    <img src="https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" className="h-16 w-16 object-cover rounded" />
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Industrial Style Kitchen</h4>
-                      <p className="mt-1 text-sm text-gray-500">By Robert Taylor</p>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default ProjectDetails;

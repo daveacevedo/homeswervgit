@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Create context
 const AuthContext = createContext();
 
 export function useAuth() {
@@ -17,215 +23,128 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Get initial session
-    const initializeAuth = async () => {
+    const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user || null);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user || null);
         
-        if (session?.user) {
-          // Fetch user profile based on role
-          await fetchUserProfile(session.user.id);
+        if (initialSession?.user) {
+          await fetchUserRole(initialSession.user.id);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('Error getting initial session:', error);
       } finally {
         setLoading(false);
       }
-      
-      // Listen for auth changes
-      const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          setSession(session);
-          setUser(session?.user || null);
-          
-          if (session?.user) {
-            // Fetch user profile based on role
-            await fetchUserProfile(session.user.id);
-          } else {
-            setProviderProfile(null);
-            setHomeownerProfile(null);
-            setUserRole(null);
-          }
-        }
-      );
-      
-      return () => {
-        subscription.unsubscribe();
-      };
     };
-    
-    initializeAuth();
-  }, []);
-  
-  const fetchUserProfile = async (userId) => {
-    try {
-      const { data, error } = await getUserProfile(userId);
+
+    getInitialSession();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user || null);
       
-      if (error) throw error;
-      
-      if (data) {
-        setUserRole(data.role);
-        
-        if (data.role === 'provider') {
-          setProviderProfile(data);
-        } else if (data.role === 'homeowner') {
-          setHomeownerProfile(data);
-        }
+      if (newSession?.user) {
+        await fetchUserRole(newSession.user.id);
+      } else {
+        setUserRole(null);
+        setProviderProfile(null);
+        setHomeownerProfile(null);
       }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
-  
-  const getUserProfile = async (userId) => {
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const fetchUserRole = async (userId) => {
     try {
       // First check if user is a provider
       const { data: providerData, error: providerError } = await supabase
-        .from('providers')
+        .from('provider_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
-      
-      if (!providerError && providerData) {
-        return { data: { ...providerData, role: 'provider' }, error: null };
+
+      if (providerData) {
+        setUserRole('provider');
+        setProviderProfile(providerData);
+        return;
       }
-      
-      // If not a provider, check if user is a homeowner
+
+      // Then check if user is a homeowner
       const { data: homeownerData, error: homeownerError } = await supabase
-        .from('homeowners')
+        .from('homeowner_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
-      
-      if (!homeownerError && homeownerData) {
-        return { data: { ...homeownerData, role: 'homeowner' }, error: null };
+
+      if (homeownerData) {
+        setUserRole('homeowner');
+        setHomeownerProfile(homeownerData);
+        return;
       }
-      
-      // If not a homeowner, check if user is an admin
+
+      // Check if user is an admin
       const { data: adminData, error: adminError } = await supabase
-        .from('admins')
+        .from('admin_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
-      
-      if (!adminError && adminData) {
-        return { data: { ...adminData, role: 'admin' }, error: null };
+
+      if (adminData) {
+        setUserRole('admin');
+        return;
       }
-      
-      return { data: null, error: new Error('User profile not found') };
+
+      // Default to homeowner if no specific role found
+      setUserRole('homeowner');
     } catch (error) {
-      console.error('Error in getUserProfile:', error);
-      return { data: null, error };
+      console.error('Error fetching user role:', error);
     }
   };
-  
+
   const login = async (email, password) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error };
-    }
+    return await supabase.auth.signInWithPassword({ email, password });
   };
-  
-  const register = async (email, password, role = 'homeowner', profileData = {}) => {
-    try {
-      // Register the user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      // Create profile based on role
-      if (data.user) {
-        const userId = data.user.id;
-        const baseProfile = {
-          id: userId,
-          email: data.user.email,
-          created_at: new Date().toISOString(),
-          ...profileData
-        };
-        
-        if (role === 'provider') {
-          await supabase.from('providers').insert([baseProfile]);
-        } else {
-          await supabase.from('homeowners').insert([baseProfile]);
-        }
-      }
-      
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error };
-    }
-  };
-  
-  const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
-  };
-  
-  const resetPassword = async (email) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
-  };
-  
-  const updateProfile = async (profileData, role = userRole) => {
-    if (!user) return { data: null, error: new Error('User not authenticated') };
+
+  const register = async (email, password, role = 'homeowner') => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
     
-    try {
-      let table = '';
-      
+    if (!error && data?.user) {
+      // Create profile based on role
       if (role === 'provider') {
-        table = 'providers';
-      } else if (role === 'homeowner') {
-        table = 'homeowners';
-      } else if (role === 'admin') {
-        table = 'admins';
+        await supabase.from('provider_profiles').insert([
+          { user_id: data.user.id, email: email }
+        ]);
       } else {
-        throw new Error('Invalid role specified');
+        await supabase.from('homeowner_profiles').insert([
+          { user_id: data.user.id, email: email }
+        ]);
       }
-      
-      const { data, error } = await supabase
-        .from(table)
-        .update(profileData)
-        .eq('id', user.id)
-        .select();
-      
-      if (error) throw error;
-      
-      if (role === 'provider') {
-        setProviderProfile(data[0]);
-      } else if (role === 'homeowner') {
-        setHomeownerProfile(data[0]);
-      }
-      
-      return { data: data[0], error: null };
-    } catch (error) {
-      return { data: null, error };
     }
+    
+    return { data, error };
   };
-  
+
+  const logout = async () => {
+    return await supabase.auth.signOut();
+  };
+
+  const resetPassword = async (email) => {
+    return await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+  };
+
+  const updatePassword = async (newPassword) => {
+    return await supabase.auth.updateUser({ password: newPassword });
+  };
+
   const value = {
     user,
     session,
@@ -233,17 +152,17 @@ export function AuthProvider({ children }) {
     userRole,
     providerProfile,
     homeownerProfile,
+    supabase,
     login,
     register,
     logout,
     resetPassword,
-    updateProfile,
-    getUserProfile,
+    updatePassword
   };
-  
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

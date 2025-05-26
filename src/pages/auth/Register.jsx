@@ -7,6 +7,7 @@ const Register = () => {
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userType, setUserType] = useState('homeowner');
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   
@@ -17,27 +18,13 @@ const Register = () => {
       setLoading(true);
       setError('');
       
-      const { data: authData, error: authError } = await registerUser(
-        data.email, 
-        data.password,
-        data.role,
-        {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          phone: data.phone || null
-        }
-      );
+      const { data: authData, error: authError } = await registerUser(data.email, data.password, userType);
       
       if (authError) {
         throw authError;
       }
       
-      // Registration successful, redirect to login
-      navigate('/login', { 
-        state: { 
-          message: 'Registration successful! Please sign in with your new account.' 
-        } 
-      });
+      // Registration successful, navigation will be handled by the auth state change in App.jsx
     } catch (err) {
       setError(err.message || 'Failed to create an account. Please try again.');
       console.error('Registration error:', err);
@@ -78,38 +65,7 @@ const Register = () => {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-md shadow-sm -space-y-px">
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label htmlFor="firstName" className="sr-only">First Name</label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="First Name"
-                  {...register('firstName', { required: 'First name is required' })}
-                />
-                {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>}
-              </div>
-              <div>
-                <label htmlFor="lastName" className="sr-only">Last Name</label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Last Name"
-                  {...register('lastName', { required: 'Last name is required' })}
-                />
-                {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>}
-              </div>
-            </div>
-            
-            <div className="mb-3">
+            <div>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
@@ -117,7 +73,7 @@ const Register = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 {...register('email', { 
                   required: 'Email is required',
@@ -129,27 +85,7 @@ const Register = () => {
               />
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
-            
-            <div className="mb-3">
-              <label htmlFor="phone" className="sr-only">Phone Number (optional)</label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Phone Number (optional)"
-                {...register('phone', { 
-                  pattern: {
-                    value: /^[0-9+-\s()]*$/,
-                    message: 'Invalid phone number'
-                  }
-                })}
-              />
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
-            </div>
-            
-            <div className="mb-3">
+            <div>
               <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
@@ -157,7 +93,7 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 {...register('password', { 
                   required: 'Password is required',
@@ -169,8 +105,7 @@ const Register = () => {
               />
               {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
             </div>
-            
-            <div className="mb-3">
+            <div>
               <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
               <input
                 id="confirmPassword"
@@ -178,7 +113,7 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
                 {...register('confirmPassword', { 
                   required: 'Please confirm your password',
@@ -187,39 +122,38 @@ const Register = () => {
               />
               {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>}
             </div>
-            
-            <div className="mb-3">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">I am a:</label>
-              <select
-                id="role"
-                name="role"
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                {...register('role', { required: 'Please select a role' })}
-                defaultValue="homeowner"
-              >
-                <option value="homeowner">Homeowner</option>
-                <option value="provider">Service Provider</option>
-              </select>
-              {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>}
-            </div>
           </div>
 
-          <div className="flex items-center">
-            <input
-              id="terms"
-              name="terms"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              {...register('terms', { required: 'You must agree to the terms and conditions' })}
-            />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-              I agree to the{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                Terms and Conditions
-              </a>
-            </label>
+          <div className="flex items-center justify-center">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <input
+                  id="homeowner"
+                  name="userType"
+                  type="radio"
+                  checked={userType === 'homeowner'}
+                  onChange={() => setUserType('homeowner')}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <label htmlFor="homeowner" className="ml-2 block text-sm text-gray-900">
+                  I'm a Homeowner
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="provider"
+                  name="userType"
+                  type="radio"
+                  checked={userType === 'provider'}
+                  onChange={() => setUserType('provider')}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <label htmlFor="provider" className="ml-2 block text-sm text-gray-900">
+                  I'm a Service Provider
+                </label>
+              </div>
+            </div>
           </div>
-          {errors.terms && <p className="mt-1 text-sm text-red-600">{errors.terms.message}</p>}
 
           <div>
             <button
@@ -241,8 +175,21 @@ const Register = () => {
                   </svg>
                 </span>
               )}
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : 'Sign up'}
             </button>
+          </div>
+          
+          <div className="text-sm text-center">
+            <p className="text-gray-600">
+              By signing up, you agree to our{' '}
+              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                Privacy Policy
+              </a>
+            </p>
           </div>
         </form>
       </div>
