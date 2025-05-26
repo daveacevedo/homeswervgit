@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Create context
 const AuthContext = createContext();
 
 export function useAuth() {
@@ -15,149 +9,241 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-  const [providerProfile, setProviderProfile] = useState(null);
-  const [homeownerProfile, setHomeownerProfile] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+    // Check for active session on load
+    const checkSession = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user || null);
+        const { data, error } = await supabase.auth.getSession();
         
-        if (initialSession?.user) {
-          await fetchUserRole(initialSession.user.id);
+        if (error) {
+          throw error;
+        }
+        
+        if (data && data.session) {
+          setUser(data.session.user);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error checking session:', error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    getInitialSession();
+    checkSession();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user || null);
-      
-      if (newSession?.user) {
-        await fetchUserRole(newSession.user.id);
-      } else {
-        setUserRole(null);
-        setProviderProfile(null);
-        setHomeownerProfile(null);
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          setUser(session.user);
+          
+          // If this is a new sign up, create a profile record
+          if (event === 'SIGNED_IN') {
+            try {
+              // Check if profile exists
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              
+              // If no profile exists, create one
+              if (!existingProfile) {
+                await supabase.from('profiles').insert({
+                  id: session.user.id,
+                  email: session.user.email,
+                  role: 'homeowner' // Default role
+                });
+                
+                // Also create a homeowner profile
+                await supabase.from('homeowner_profiles').insert({
+                  user_id: session.user.id
+                });
+              }
+            } catch (error) {
+              console.error('Error creating profile:', error);
+            }
+          }
+        } else {
+          setUser(null);
+        }
       }
-    });
+    );
 
-    // Cleanup subscription on unmount
     return () => {
-      subscription?.unsubscribe();
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 
-  const fetchUserRole = async (userId) => {
-    try {
-      // First check if user is a provider
-      const { data: providerData, error: providerError } = await supabase
-        .from('provider_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (providerData) {
-        setUserRole('provider');
-        setProviderProfile(providerData);
-        return;
-      }
-
-      // Then check if user is a homeowner
-      const { data: homeownerData, error: homeownerError } = await supabase
-        .from('homeowner_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (homeownerData) {
-        setUserRole('homeowner');
-        setHomeownerProfile(homeownerData);
-        return;
-      }
-
-      // Check if user is an admin
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (adminData) {
-        setUserRole('admin');
-        return;
-      }
-
-      // Default to homeowner if no specific role found
-      setUserRole('homeowner');
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-    }
-  };
-
-  const login = async (email, password) => {
-    return await supabase.auth.signInWithPassword({ email, password });
-  };
-
+  // Register a new user
   const register = async (email, password, role = 'homeowner') => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    
-    if (!error && data?.user) {
-      // Create profile based on role
-      if (role === 'provider') {
-        await supabase.from('provider_profiles').insert([
-          { user_id: data.user.id, email: email }
-        ]);
-      } else {
-        await supabase.from('homeowner_profiles').insert([
-          { user_id: data.user.id, email: email }
-        ]);
+    try {
+      setError(null);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
       }
+      
+      return { data };
+    } catch (error) {
+      console.error('Error in registration:', error);
+      setError(error.message);
+      return { error };
     }
-    
-    return { data, error };
   };
 
+  // Login an existing user
+  const login = async (email, password) => {
+    try {
+      setError(null);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { data };
+    } catch (error) {
+      console.error('Error in login:', error);
+      setError(error.message);
+      return { error };
+    }
+  };
+
+  // Logout the current user
   const logout = async () => {
-    return await supabase.auth.signOut();
+    try {
+      setError(null);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in logout:', error);
+      setError(error.message);
+    }
   };
 
+  // Reset password
   const resetPassword = async (email) => {
-    return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      setError(null);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error in reset password:', error);
+      setError(error.message);
+      return { error };
+    }
   };
 
+  // Update password
   const updatePassword = async (newPassword) => {
-    return await supabase.auth.updateUser({ password: newPassword });
+    try {
+      setError(null);
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setError(error.message);
+      return { error };
+    }
+  };
+
+  // Get user profile
+  const getUserProfile = async () => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  // Update user profile
+  const updateUserProfile = async (profileData) => {
+    if (!user) return { error: 'No user logged in' };
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { data };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { error };
+    }
   };
 
   const value = {
     user,
-    session,
     loading,
-    userRole,
-    providerProfile,
-    homeownerProfile,
-    supabase,
-    login,
+    error,
     register,
+    login,
     logout,
     resetPassword,
-    updatePassword
+    updatePassword,
+    getUserProfile,
+    updateUserProfile
   };
 
   return (

@@ -7,9 +7,9 @@ const AdminSettings = () => {
   
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
-    siteName: 'Home Service Hub',
-    siteDescription: 'Connecting homeowners with trusted service providers',
-    contactEmail: 'admin@homeservicehub.com',
+    siteName: 'Home Swerv',
+    siteDescription: 'Your Community Hub - Connecting homeowners with trusted service providers',
+    contactEmail: 'admin@homeswerv.com',
     supportPhone: '(555) 123-4567',
     maintenanceMode: false
   });
@@ -17,9 +17,9 @@ const AdminSettings = () => {
   // Email settings state
   const [emailSettings, setEmailSettings] = useState({
     emailProvider: 'sendgrid',
-    fromEmail: 'noreply@homeservicehub.com',
-    replyToEmail: 'support@homeservicehub.com',
-    emailFooter: 'Home Service Hub - Connecting homeowners with trusted service providers',
+    fromEmail: 'noreply@homeswerv.com',
+    replyToEmail: 'support@homeswerv.com',
+    emailFooter: 'Home Swerv - Your Community Hub',
     enableEmailNotifications: true
   });
   
@@ -93,7 +93,7 @@ const AdminSettings = () => {
               activeTab === 'general'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
           >
             General
           </button>
@@ -103,7 +103,7 @@ const AdminSettings = () => {
               activeTab === 'email'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
           >
             Email
           </button>
@@ -113,7 +113,7 @@ const AdminSettings = () => {
               activeTab === 'integrations'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
           >
             Integrations
           </button>
@@ -123,7 +123,7 @@ const AdminSettings = () => {
               activeTab === 'security'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
           >
             Security
           </button>
@@ -134,7 +134,7 @@ const AdminSettings = () => {
       <div className="mt-6">
         {/* General Settings */}
         {activeTab === 'general' && (
-          <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+          <div className="bg-white shadow-soft rounded-lg px-4 py-5 sm:p-6">
             <div className="md:grid md:grid-cols-3 md:gap-6">
               <div className="md:col-span-1">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">General Settings</h3>
@@ -229,7 +229,7 @@ const AdminSettings = () => {
                     <button
                       type="button"
                       onClick={() => handleSaveSettings('general')}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
                     >
                       Save Settings
                     </button>
@@ -242,7 +242,7 @@ const AdminSettings = () => {
         
         {/* Email Settings */}
         {activeTab === 'email' && (
-          <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+          <div className="bg-white shadow-soft rounded-lg px-4 py-5 sm:p-6">
             <div className="md:grid md:grid-cols-3 md:gap-6">
               <div className="md:col-span-1">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">Email Settings</h3>
@@ -341,7 +341,7 @@ const AdminSettings = () => {
                     <button
                       type="button"
                       onClick={() => handleSaveSettings('email')}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
                     >
                       Save Settings
                     </button>
@@ -354,7 +354,7 @@ const AdminSettings = () => {
         
         {/* Integration Settings */}
         {activeTab === 'integrations' && (
-          <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+          <div className="bg-white shadow-soft rounded-lg px-4 py-5 sm:p-6">
             <div className="md:grid md:grid-cols-3 md:gap-6">
               <div className="md:col-span-1">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">Integration Settings</h3>
@@ -454,7 +454,7 @@ const AdminSettings = () => {
                     <button
                       type="button"
                       onClick={() => handleSaveSettings('integration')}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
                     >
                       Save Settings
                     </button>
@@ -467,7 +467,7 @@ const AdminSettings = () => {
         
         {/* Security Settings */}
         {activeTab === 'security' && (
-          <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+          <div className="bg-white shadow-soft rounded-lg px-4 py-5 sm:p-6">
             <div className="md:grid md:grid-cols-3 md:gap-6">
               <div className="md:col-span-1">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">Security Settings</h3>
@@ -584,7 +584,7 @@ const AdminSettings = () => {
                     <button
                       type="button"
                       onClick={() => handleSaveSettings('security')}
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
                     >
                       Save Settings
                     </button>
