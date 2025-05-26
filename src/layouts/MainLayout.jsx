@@ -1,240 +1,274 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon, BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { Menu, Transition } from '@headlessui/react';
-import supabase from '../utils/supabaseClient';
+import React, { useState } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const MainLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+  const { user, userRole, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        setUser(user);
-        
-        // Get user role from profiles
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-          
-        if (!error && data) {
-          setUserRole(data.role);
-        }
-      }
-    };
-    
-    getUser();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      const { error } = await logout();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  // Navigation items based on user role
-  const getNavItems = () => {
+  const isActive = (path) => {
+    return location.pathname.startsWith(path) ? 'bg-blue-800 text-white' : 'text-gray-300 hover:bg-blue-700 hover:text-white';
+  };
+
+  const getNavLinks = () => {
     if (userRole === 'provider') {
       return [
-        { name: 'Dashboard', href: '/provider/dashboard' },
-        { name: 'Jobs', href: '/provider/jobs' },
-        { name: 'Calendar', href: '/provider/calendar' },
-        { name: 'Messages', href: '/provider/messages' },
-        { name: 'Profile', href: '/provider/profile' },
-        { name: 'Community', href: '/community' },
+        { name: 'Dashboard', path: '/provider/dashboard' },
+        { name: 'Jobs', path: '/provider/jobs' },
+        { name: 'Calendar', path: '/provider/calendar' },
+        { name: 'Messages', path: '/provider/messages' },
+        { name: 'Community', path: '/community' },
       ];
     } else if (userRole === 'homeowner') {
       return [
-        { name: 'Dashboard', href: '/homeowner/dashboard' },
-        { name: 'Projects', href: '/homeowner/projects' },
-        { name: 'Providers', href: '/homeowner/providers' },
-        { name: 'Messages', href: '/homeowner/messages' },
-        { name: 'Profile', href: '/homeowner/profile' },
-        { name: 'Community', href: '/community' },
+        { name: 'Dashboard', path: '/homeowner/dashboard' },
+        { name: 'Projects', path: '/homeowner/projects' },
+        { name: 'Providers', path: '/homeowner/providers' },
+        { name: 'Messages', path: '/homeowner/messages' },
+        { name: 'Community', path: '/community' },
       ];
     } else {
-      // Default navigation for logged out users
+      // Default or public navigation
       return [
-        { name: 'Home', href: '/' },
-        { name: 'Community', href: '/community' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'About', href: '/about' },
-        { name: 'Contact', href: '/contact' },
+        { name: 'Home', path: '/' },
+        { name: 'About', path: '/about' },
+        { name: 'Contact', path: '/contact' },
+        { name: 'Pricing', path: '/pricing' },
+        { name: 'Community', path: '/community' },
       ];
     }
   };
 
-  const navItems = getNavItems();
+  const navLinks = getNavLinks();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        
-        <div className="fixed inset-y-0 left-0 flex flex-col w-64 max-w-xs bg-white">
-          <div className="flex items-center justify-between h-16 px-6 bg-primary-600">
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <span className="text-xl font-semibold text-white">ServiceConnectPro</span>
-            </div>
-            <button
-              className="text-white"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto">
-            <nav className="px-2 py-4">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-4 py-2 mt-1 text-sm rounded-md ${
-                    location.pathname === item.href
-                      ? 'bg-primary-50 text-primary-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-1 min-h-0 bg-white border-r border-gray-200">
-          <div className="flex items-center h-16 px-6 bg-primary-600">
-            <span className="text-xl font-semibold text-white">ServiceConnectPro</span>
-          </div>
-          
-          <div className="flex flex-col flex-1 overflow-y-auto">
-            <nav className="flex-1 px-4 py-6">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-4 py-2 mt-1 text-sm rounded-md ${
-                    location.pathname === item.href
-                      ? 'bg-primary-50 text-primary-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="lg:pl-64">
-        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 sm:px-6 lg:px-8">
-          <button
-            className="text-gray-500 lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Bars3Icon className="w-6 h-6" />
-          </button>
-          
-          <div className="flex items-center">
-            {user ? (
-              <>
-                <button className="p-1 text-gray-500 rounded-full hover:bg-gray-100">
-                  <BellIcon className="w-6 h-6" />
-                </button>
-                
-                <Menu as="div" className="relative ml-4">
-                  <Menu.Button className="flex items-center">
-                    <UserCircleIcon className="w-8 h-8 text-gray-400" />
-                  </Menu.Button>
-                  
-                  <Transition
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Menu.Items className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                      <div className="py-1">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href={`/${userRole}/profile`}
-                              className={`${
-                                active ? 'bg-gray-100' : ''
-                              } block px-4 py-2 text-sm text-gray-700`}
-                            >
-                              Your Profile
-                            </a>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href={`/${userRole}/settings`}
-                              className={`${
-                                active ? 'bg-gray-100' : ''
-                              } block px-4 py-2 text-sm text-gray-700`}
-                            >
-                              Settings
-                            </a>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              onClick={handleSignOut}
-                              className={`${
-                                active ? 'bg-gray-100' : ''
-                              } block w-full text-left px-4 py-2 text-sm text-gray-700`}
-                            >
-                              Sign out
-                            </button>
-                          )}
-                        </Menu.Item>
-                      </div>
-                    </Menu.Items>
-                  </Transition>
-                </Menu>
-              </>
-            ) : (
-              <div className="space-x-2">
-                <a
-                  href="/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Log in
-                </a>
-                <a
-                  href="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700"
-                >
-                  Sign up
-                </a>
+              <div className="flex-shrink-0">
+                <Link to="/" className="text-white font-bold text-xl">HomeServiceHub</Link>
               </div>
-            )}
+              <div className="hidden md:block">
+                <div className="ml-10 flex items-baseline space-x-4">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      to={link.path}
+                      className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(link.path)}`}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="ml-4 flex items-center md:ml-6">
+                {user ? (
+                  <div className="ml-3 relative">
+                    <div>
+                      <button
+                        onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                        className="max-w-xs bg-blue-600 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-600 focus:ring-white"
+                        id="user-menu-button"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                      >
+                        <span className="sr-only">Open user menu</span>
+                        <div className="h-8 w-8 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                          {user.email.charAt(0).toUpperCase()}
+                        </div>
+                      </button>
+                    </div>
+                    {isProfileMenuOpen && (
+                      <div
+                        className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu"
+                        aria-orientation="vertical"
+                        aria-labelledby="user-menu-button"
+                        tabIndex="-1"
+                      >
+                        <Link
+                          to={`/${userRole}/profile`}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          role="menuitem"
+                          tabIndex="-1"
+                          id="user-menu-item-0"
+                        >
+                          Your Profile
+                        </Link>
+                        <Link
+                          to={`/${userRole}/settings`}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          role="menuitem"
+                          tabIndex="-1"
+                          id="user-menu-item-1"
+                        >
+                          Settings
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          role="menuitem"
+                          tabIndex="-1"
+                          id="user-menu-item-2"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex space-x-4">
+                    <Link
+                      to="/login"
+                      className="text-white bg-blue-700 hover:bg-blue-800 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="text-blue-600 bg-white hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="-mr-2 flex md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="bg-blue-600 inline-flex items-center justify-center p-2 rounded-md text-white hover:text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-600 focus:ring-white"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                <svg
+                  className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg
+                  className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-        
-        <main className="p-4 sm:p-6 lg:p-8">
+
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${isActive(link.path)}`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+          <div className="pt-4 pb-3 border-t border-blue-700">
+            {user ? (
+              <div className="flex items-center px-5">
+                <div className="flex-shrink-0">
+                  <div className="h-10 w-10 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                    {user.email.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <div className="text-base font-medium leading-none text-white">{user.email}</div>
+                  <div className="text-sm font-medium leading-none text-blue-200 mt-1">
+                    {userRole && userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            <div className="mt-3 px-2 space-y-1">
+              {user ? (
+                <>
+                  <Link
+                    to={`/${userRole}/profile`}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-700"
+                  >
+                    Your Profile
+                  </Link>
+                  <Link
+                    to={`/${userRole}/settings`}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-700"
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-700"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    to="/login"
+                    className="block w-full text-center px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block w-full text-center px-3 py-2 rounded-md text-base font-medium text-blue-600 bg-white hover:bg-gray-100"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
+
+      <footer className="bg-white">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-center text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} HomeServiceHub. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

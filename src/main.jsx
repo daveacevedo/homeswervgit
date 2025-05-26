@@ -1,9 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { AuthProvider } from './contexts/AuthContext'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
-// Use createRoot API without StrictMode to reduce potential issues
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <App />
-);
+  <React.StrictMode>
+    <ErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ErrorBoundary>
+  </React.StrictMode>,
+)

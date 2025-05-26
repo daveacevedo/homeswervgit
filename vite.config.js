@@ -36,5 +36,11 @@ export default defineConfig({
     hmr: {
       overlay: false
     }
+  },
+  // Disable file system APIs that are not supported in WebContainer
+  define: {
+    'window.showDirectoryPicker': 'undefined',
+    'window.showOpenFilePicker': 'undefined',
+    'window.showSaveFilePicker': 'undefined'
   }
 })

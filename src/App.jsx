@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
 
 // Layout components
 import MainLayout from './layouts/MainLayout';
@@ -46,60 +45,11 @@ import Contact from './pages/public/Contact';
 import Pricing from './pages/public/Pricing';
 import NotFound from './pages/public/NotFound';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Auth context
+import { useAuth } from './contexts/AuthContext';
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
-    // Get current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        // Get user role from profiles table
-        getUserRole(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        getUserRole(session.user.id);
-      } else {
-        setUserRole(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const getUserRole = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      setUserRole(data?.role || 'homeowner');
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { user, loading, session, userRole } = useAuth();
 
   if (loading) {
     return (
@@ -120,8 +70,8 @@ function App() {
         
         {/* Auth routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={!session ? <Login /> : <Navigate to={`/${userRole}/dashboard`} />} />
-          <Route path="/register" element={!session ? <Register /> : <Navigate to={`/${userRole}/dashboard`} />} />
+          <Route path="/login" element={!session ? <Login /> : <Navigate to={`/${userRole || 'homeowner'}/dashboard`} />} />
+          <Route path="/register" element={!session ? <Register /> : <Navigate to={`/${userRole || 'homeowner'}/dashboard`} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
@@ -137,7 +87,7 @@ function App() {
           element={
             session && userRole === 'provider' 
               ? <MainLayout /> 
-              : <Navigate to={session ? `/${userRole}/dashboard` : "/login"} />
+              : <Navigate to={session ? `/${userRole || 'homeowner'}/dashboard` : "/login"} />
           }
         >
           <Route path="dashboard" element={<ProviderDashboard />} />
@@ -154,7 +104,7 @@ function App() {
           element={
             session && (userRole === 'homeowner' || userRole === 'provider') 
               ? <MainLayout /> 
-              : <Navigate to={session ? `/${userRole}/dashboard` : "/login"} />
+              : <Navigate to={session ? `/${userRole || 'homeowner'}/dashboard` : "/login"} />
           }
         >
           <Route path="dashboard" element={<HomeownerDashboard />} />
@@ -171,7 +121,7 @@ function App() {
           element={
             session && userRole === 'admin' 
               ? <AdminLayout /> 
-              : <Navigate to={session ? `/${userRole}/dashboard` : "/login"} />
+              : <Navigate to={session ? `/${userRole || 'homeowner'}/dashboard` : "/login"} />
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />
