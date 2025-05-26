@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@heroicons/react': path.resolve(__dirname, 'node_modules/@heroicons/react/dist/esm'),
+      '@': path.resolve(__dirname, './src'),
     }
   },
   // Add optimizeDeps configuration to help with dependency pre-bundling
@@ -20,41 +20,50 @@ export default defineConfig({
       'chart.js',
       'react-chartjs-2',
       'date-fns'
-    ],
-    exclude: ['@heroicons/react']
+    ]
   },
-  // Reduce build optimization to avoid potential deadlocks
+  // Improved build optimization with better chunking strategy
   build: {
     sourcemap: true,
     minify: 'esbuild',
+    chunkSizeWarningLimit: 600, // Increase the warning limit slightly
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@headlessui/react'],
-          charts: ['chart.js', 'react-chartjs-2']
+          // Core libraries
+          'react-core': ['react', 'react-dom'],
+          
+          // Routing
+          'router': ['react-router-dom'],
+          
+          // UI components
+          'ui-components': ['@headlessui/react'],
+          
+          // Form handling
+          'forms': ['react-hook-form'],
+          
+          // Data visualization
+          'charts': ['chart.js', 'react-chartjs-2'],
+          
+          // Date utilities
+          'date-utils': ['date-fns'],
+          
+          // Supabase related
+          'supabase': ['@supabase/supabase-js']
         }
       }
     }
   },
-  // Increase memory limit for Node.js and fix timeout issues
+  // Configure server to use a specific port and fix timeout issues
   server: {
+    port: 5174, // Set a specific port to avoid conflicts
+    strictPort: false, // Allow Vite to try another port if this one is in use
     hmr: {
-      overlay: false,
-      timeout: 0 // Disable timeout
+      overlay: true,
+      timeout: 60000 // Increase timeout to 60 seconds
     },
     watch: {
-      usePolling: true,
-      interval: 1000
+      usePolling: false
     }
-  },
-  // Disable file system APIs that are not supported in WebContainer
-  define: {
-    'window.showDirectoryPicker': 'undefined',
-    'window.showOpenFilePicker': 'undefined',
-    'window.showSaveFilePicker': 'undefined',
-    'window.FileSystemHandle': 'undefined',
-    'window.FileSystemFileHandle': 'undefined',
-    'window.FileSystemDirectoryHandle': 'undefined'
   }
 })

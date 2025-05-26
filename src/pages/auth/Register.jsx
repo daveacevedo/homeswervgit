@@ -1,33 +1,76 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Register = () => {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    userType: 'homeowner', // Default to homeowner
+  });
   const [error, setError] = useState('');
-  const [userType, setUserType] = useState('homeowner');
-  const { register: registerUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
-  
-  const password = watch('password');
 
-  const onSubmit = async (data) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validateForm = () => {
+    // Reset error
+    setError('');
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    // Check password strength
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    // Check email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
       setLoading(true);
-      setError('');
       
-      const { data: authData, error: authError } = await registerUser(data.email, data.password, userType);
+      const { data, error: signUpError } = await signUp(
+        formData.email, 
+        formData.password
+      );
       
-      if (authError) {
-        throw authError;
-      }
+      if (signUpError) throw signUpError;
       
-      // Registration successful, navigation will be handled by the auth state change in App.jsx
+      // Redirect to dashboard or confirmation page
+      navigate('/dashboard');
+      
     } catch (err) {
-      setError(err.message || 'Failed to create an account. Please try again.');
       console.error('Registration error:', err);
+      setError(err.message || 'Failed to create an account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -42,14 +85,14 @@ const Register = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               sign in to your existing account
             </Link>
           </p>
         </div>
         
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="rounded-md bg-red-50 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -57,33 +100,27 @@ const Register = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <h3 className="text-sm font-medium text-red-800">{error}</h3>
               </div>
             </div>
           </div>
         )}
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email-address" className="sr-only">Email address</label>
               <input
-                id="email"
+                id="email-address"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
-                {...register('email', { 
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
+                value={formData.email}
+                onChange={handleChange}
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
@@ -93,17 +130,11 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
-                {...register('password', { 
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters'
-                  }
-                })}
+                value={formData.password}
+                onChange={handleChange}
               />
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
             </div>
             <div>
               <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
@@ -113,64 +144,66 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
-                {...register('confirmPassword', { 
-                  required: 'Please confirm your password',
-                  validate: value => value === password || 'Passwords do not match'
-                })}
+                value={formData.confirmPassword}
+                onChange={handleChange}
               />
-              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>}
             </div>
           </div>
 
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <input
-                  id="homeowner"
-                  name="userType"
-                  type="radio"
-                  checked={userType === 'homeowner'}
-                  onChange={() => setUserType('homeowner')}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                />
-                <label htmlFor="homeowner" className="ml-2 block text-sm text-gray-900">
-                  I'm a Homeowner
-                </label>
+          <div>
+            <fieldset>
+              <legend className="text-sm font-medium text-gray-700">I am a:</legend>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center">
+                  <input
+                    id="homeowner"
+                    name="userType"
+                    type="radio"
+                    value="homeowner"
+                    checked={formData.userType === 'homeowner'}
+                    onChange={handleChange}
+                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                  />
+                  <label htmlFor="homeowner" className="ml-3 block text-sm font-medium text-gray-700">
+                    Homeowner
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="provider"
+                    name="userType"
+                    type="radio"
+                    value="provider"
+                    checked={formData.userType === 'provider'}
+                    onChange={handleChange}
+                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                  />
+                  <label htmlFor="provider" className="ml-3 block text-sm font-medium text-gray-700">
+                    Service Provider
+                  </label>
+                </div>
               </div>
-              <div className="flex items-center">
-                <input
-                  id="provider"
-                  name="userType"
-                  type="radio"
-                  checked={userType === 'provider'}
-                  onChange={() => setUserType('provider')}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                />
-                <label htmlFor="provider" className="ml-2 block text-sm text-gray-900">
-                  I'm a Service Provider
-                </label>
-              </div>
-            </div>
+            </fieldset>
           </div>
 
           <div>
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {loading ? (
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <svg className="animate-spin h-5 w-5 text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
               ) : (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                  <svg className="h-5 w-5 text-blue-500 group-hover:text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                   </svg>
                 </span>
@@ -182,13 +215,13 @@ const Register = () => {
           <div className="text-sm text-center">
             <p className="text-gray-600">
               By signing up, you agree to our{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="#" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Terms of Service
-              </a>{' '}
+              </Link>{' '}
               and{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="#" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Privacy Policy
-              </a>
+              </Link>
             </p>
           </div>
         </form>

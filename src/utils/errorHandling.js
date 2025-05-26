@@ -1,50 +1,86 @@
 /**
- * Centralized error handling utility
+ * Utility functions for error handling and reporting
  */
 
-// Log error to console with additional context
-export const logError = (error, context = {}) => {
-  console.error(
-    `Error${context.location ? ` in ${context.location}` : ''}:`,
-    error,
-    context
-  );
+// Check if Sentry is available and not blocked
+export const checkSentryAvailability = async () => {
+  try {
+    // Simple test to see if we can reach Sentry's API
+    const response = await fetch('https://sentry.io/api/0/', {
+      method: 'HEAD',
+      mode: 'no-cors', // This prevents CORS issues but means we can't read the response
+      cache: 'no-cache',
+    });
+    
+    // If we get here, the request didn't throw, which is a good sign
+    return true;
+  } catch (error) {
+    console.error('Error checking Sentry availability:', error);
+    return false;
+  }
 };
 
-// Format error message for user display
-export const formatErrorMessage = (error) => {
-  if (!error) return 'An unknown error occurred';
+// Log errors to console and potentially to a backend service
+export const logError = (error, context = {}) => {
+  // Always log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Error logged:', error);
+    console.error('Context:', context);
+  }
   
-  // Handle different error types
+  // If Sentry is blocked or unavailable, we could send to our own error logging endpoint
+  if (context.sentryBlocked) {
+    // Log to our own error tracking system
+    try {
+      // This would be an API call to your own error logging service
+      // For now, we'll just log to console
+      console.info('Would log to fallback error service:', {
+        error: typeof error === 'string' ? error : error.message || 'Unknown error',
+        stack: error.stack,
+        context,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (loggingError) {
+      console.error('Failed to log to fallback service:', loggingError);
+    }
+  }
+  
+  // Return a unique ID for this error instance
+  return Date.now().toString();
+};
+
+// Format error for display to users
+export const formatErrorForUser = (error) => {
   if (typeof error === 'string') {
     return error;
   }
   
+  // If it's an API error with a specific format
+  if (error.response && error.response.data && error.response.data.message) {
+    return error.response.data.message;
+  }
+  
+  // If it's a standard Error object
   if (error.message) {
     return error.message;
   }
   
-  if (error.error_description) {
-    return error.error_description;
+  // Default fallback
+  return 'An unexpected error occurred. Please try again later.';
+};
+
+// Determine if an error should be shown to the user
+export const shouldShowErrorToUser = (error) => {
+  // Don't show network connectivity errors directly
+  if (error.name === 'NetworkError' || error.message?.includes('network')) {
+    return false;
   }
   
-  return 'An unexpected error occurred. Please try again.';
-};
-
-// Handle API errors consistently
-export const handleApiError = (error, fallbackMessage = 'API request failed') => {
-  logError(error, { location: 'API request' });
+  // Don't show CORS errors directly
+  if (error.message?.includes('CORS')) {
+    return false;
+  }
   
-  // Return user-friendly error message
-  return formatErrorMessage(error) || fallbackMessage;
-};
-
-// Create a standardized error response object
-export const createErrorResponse = (error, status = 'error') => {
-  return {
-    status,
-    message: formatErrorMessage(error),
-    timestamp: new Date().toISOString(),
-    error: process.env.NODE_ENV === 'development' ? error : undefined
-  };
+  // Show most other errors
+  return true;
 };
