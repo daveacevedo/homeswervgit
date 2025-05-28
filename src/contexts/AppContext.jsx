@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthContext';
+import { useHomeowner } from './HomeownerContext';
+import { useProvider } from './ProviderContext';
+import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext();
 
@@ -10,203 +12,136 @@ export function useApp() {
 
 export function AppProvider({ children }) {
   const { user } = useAuth();
+  const homeownerContext = useHomeowner();
+  const providerContext = useProvider();
+  
+  // Safely destructure the context values
+  const homeownerProfile = homeownerContext?.homeownerProfile;
+  const getHomeownerProfile = homeownerContext?.getHomeownerProfile;
+  const providerProfile = providerContext?.providerProfile;
+  const getProviderProfile = providerContext?.getProviderProfile;
+  
+  const [activeRole, setActiveRole] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [hasMultipleRoles, setHasMultipleRoles] = useState(false);
+  const [userPreferences, setUserPreferences] = useState(null);
 
-  // Fetch user profile when auth user changes
+  // Load user profiles and determine roles
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) {
-        setUserProfile(null);
+    const loadUserProfiles = async () => {
+      if (!user || !getHomeownerProfile || !getProviderProfile) {
         setLoading(false);
         return;
       }
-
+      
       try {
         setLoading(true);
         
-        // First check if user has a profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
+        // Fetch both profiles
+        const [homeowner, provider] = await Promise.all([
+          getHomeownerProfile(),
+          getProviderProfile()
+        ]);
+        
+        // Fetch user preferences
+        const { data: preferences } = await supabase
+          .from('user_preferences')
           .select('*')
           .eq('user_id', user.id)
           .single();
         
-        if (profileError && profileError.code !== 'PGRST116') {
-          throw profileError;
+        setUserPreferences(preferences);
+        
+        // Determine if user has multiple roles
+        const hasHomeowner = !!homeowner;
+        const hasProvider = !!provider;
+        const multipleRoles = hasHomeowner && hasProvider;
+        
+        setHasMultipleRoles(multipleRoles);
+        
+        // Set active role based on preferences or default to available role
+        let role = null;
+        
+        if (multipleRoles) {
+          // If user has preferences, use default_role
+          if (preferences?.default_role) {
+            role = preferences.default_role;
+          } else {
+            // Default to homeowner if both roles exist
+            role = 'homeowner';
+          }
+        } else if (hasHomeowner) {
+          role = 'homeowner';
+        } else if (hasProvider) {
+          role = 'provider';
         }
         
-        if (profileData) {
-          setUserProfile(profileData);
-        } else {
-          // If no profile exists, create one with default values
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([
-              { 
-                user_id: user.id,
-                email: user.email,
-                role: 'homeowner', // Default role
-                full_name: '',
-                avatar_url: '',
-                created_at: new Date()
-              }
-            ])
-            .select()
-            .single();
-          
-          if (createError) throw createError;
-          
-          setUserProfile(newProfile);
+        setActiveRole(role);
+        
+        // Set the active profile based on role
+        if (role === 'homeowner') {
+          setUserProfile(homeowner);
+        } else if (role === 'provider') {
+          setUserProfile(provider);
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
-        setError(error.message);
+        console.error('Error loading user profiles:', error);
       } finally {
         setLoading(false);
       }
     };
+    
+    loadUserProfiles();
+  }, [user, getHomeownerProfile, getProviderProfile]);
 
-    fetchUserProfile();
-  }, [user]);
-
-  // Fetch notifications when user profile changes
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!user) {
-        setNotifications([]);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-        
-        if (error) throw error;
-        
-        setNotifications(data || []);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      }
-    };
-
-    fetchNotifications();
-
-    // Set up real-time subscription for notifications
-    const notificationsSubscription = supabase
-      .channel('public:notifications')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'notifications',
-          filter: `user_id=eq.${user?.id}` 
-        }, 
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setNotifications(prev => [payload.new, ...prev].slice(0, 10));
-          } else if (payload.eventType === 'UPDATE') {
-            setNotifications(prev => 
-              prev.map(notification => 
-                notification.id === payload.new.id ? payload.new : notification
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setNotifications(prev => 
-              prev.filter(notification => notification.id !== payload.old.id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (notificationsSubscription) {
-        supabase.removeChannel(notificationsSubscription);
-      }
-    };
-  }, [user]);
-
-  // Profile management functions
-  const updateProfile = async (updates) => {
+  // Switch between roles
+  const switchRole = async (newRole) => {
+    if (!user || !hasMultipleRoles) return;
+    
     try {
-      if (!user) throw new Error('User not authenticated');
+      setLoading(true);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+      // Update active role
+      setActiveRole(newRole);
       
-      if (error) throw error;
+      // Update user profile based on new role
+      if (newRole === 'homeowner') {
+        setUserProfile(homeownerProfile);
+      } else if (newRole === 'provider') {
+        setUserProfile(providerProfile);
+      }
       
-      setUserProfile(data);
-      return data;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  };
-
-  // Notification functions
-  const markNotificationAsRead = async (notificationId) => {
-    try {
+      // Save preference to database
       const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          default_role: newRole,
+          updated_at: new Date()
+        });
       
       if (error) throw error;
       
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true } 
-            : notification
-        )
-      );
+      // Update local preferences
+      setUserPreferences({
+        ...userPreferences,
+        default_role: newRole
+      });
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      throw error;
-    }
-  };
-
-  const markAllNotificationsAsRead = async () => {
-    try {
-      if (!user) throw new Error('User not authenticated');
-      
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', user.id)
-        .eq('read', false);
-      
-      if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      throw error;
+      console.error('Error switching roles:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const value = {
+    activeRole,
     userProfile,
-    notifications,
+    hasMultipleRoles,
+    userPreferences,
     loading,
-    error,
-    updateProfile,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
+    switchRole
   };
 
   return (

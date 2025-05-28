@@ -13,7 +13,8 @@ import {
   BriefcaseIcon,
   UserGroupIcon,
   BellIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 
 const MainLayout = () => {
@@ -52,6 +53,7 @@ const MainLayout = () => {
         { name: 'Projects', href: '/homeowner/projects', icon: BriefcaseIcon },
         { name: 'Providers', href: '/homeowner/providers', icon: UserGroupIcon },
         { name: 'Messages', href: '/homeowner/messages', icon: ChatBubbleLeftRightIcon },
+        { name: 'Rewards', href: '/homeowner/rewards', icon: StarIcon },
         { name: 'Profile', href: '/homeowner/profile', icon: UserIcon },
         { name: 'Settings', href: '/homeowner/settings', icon: Cog6ToothIcon },
       ];
@@ -75,7 +77,7 @@ const MainLayout = () => {
           </div>
           
           <div className="flex items-center flex-shrink-0 px-4">
-            <Link to="/" className="text-xl font-bold text-blue-600">ServiceConnectPro</Link>
+            <Link to="/" className="text-xl font-bold text-blue-600">Home Swerv</Link>
           </div>
           
           <div className="flex-1 h-0 mt-5 overflow-y-auto">
@@ -109,7 +111,7 @@ const MainLayout = () => {
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto border-r border-gray-200 bg-white">
           <div className="flex items-center flex-shrink-0 px-4">
-            <Link to="/" className="text-xl font-bold text-blue-600">ServiceConnectPro</Link>
+            <Link to="/" className="text-xl font-bold text-blue-600">Home Swerv</Link>
           </div>
           
           <div className="flex flex-col flex-grow mt-5">
@@ -152,6 +154,16 @@ const MainLayout = () => {
           
           <div className="flex-1 px-4 flex justify-end">
             <div className="ml-4 flex items-center md:ml-6">
+              {/* Rewards display */}
+              {role === 'homeowner' && (
+                <div className="mr-4 flex items-center bg-blue-50 px-3 py-1 rounded-full">
+                  <StarIcon className="h-5 w-5 text-blue-600 mr-1" />
+                  <span className="text-sm font-medium text-blue-600">
+                    {userProfile?.rewards_points || 0} Points
+                  </span>
+                </div>
+              )}
+              
               {/* Notifications dropdown */}
               <div className="relative">
                 <button

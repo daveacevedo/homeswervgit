@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
+import { useHomeowner } from '../../contexts/HomeownerContext';
+import { useProvider } from '../../contexts/ProviderContext';
 
 const schema = yup.object().shape({
   email: yup.string().email('Please enter a valid email').required('Email is required'),
@@ -12,6 +14,8 @@ const schema = yup.object().shape({
 
 const Login = () => {
   const { signIn } = useAuth();
+  const { getHomeownerProfile } = useHomeowner();
+  const { getProviderProfile } = useProvider();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,11 +29,29 @@ const Login = () => {
       setLoading(true);
       setError('');
       
-      const { user } = await signIn(data.email, data.password);
+      // Sign in the user
+      await signIn(data.email, data.password);
       
-      if (user) {
-        // Redirect based on user role (will be determined by profile)
+      // Check which profiles the user has
+      const [homeownerProfile, providerProfile] = await Promise.all([
+        getHomeownerProfile(),
+        getProviderProfile()
+      ]);
+      
+      // Determine where to redirect based on profiles
+      if (homeownerProfile && providerProfile) {
+        // User has both profiles, check if they have a default preference
+        // For now, default to homeowner dashboard
+        navigate('/user-type-selection');
+      } else if (providerProfile) {
+        // User is only a provider
+        navigate('/provider/dashboard');
+      } else if (homeownerProfile) {
+        // User is only a homeowner
         navigate('/homeowner/dashboard');
+      } else {
+        // User has no profile yet, redirect to profile selection
+        navigate('/user-type-selection');
       }
     } catch (error) {
       console.error('Login error:', error);

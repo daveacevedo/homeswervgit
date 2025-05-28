@@ -6,9 +6,9 @@ function Footer() {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">ServiceConnect Pro</h3>
+            <h3 className="text-xl font-bold mb-4">Home Swerv</h3>
             <p className="text-gray-300">
-              Connecting homeowners with trusted service providers since 2023.
+              Where home improvement meets community rewards since 2023.
             </p>
           </div>
           
@@ -57,7 +57,7 @@ function Footer() {
               <p>123 Service Street</p>
               <p>Anytown, ST 12345</p>
               <p className="mt-2">
-                <a href="mailto:info@serviceconnectpro.com" className="hover:text-white">info@serviceconnectpro.com</a>
+                <a href="mailto:info@homeswerv.com" className="hover:text-white">info@homeswerv.com</a>
               </p>
               <p>
                 <a href="tel:+15551234567" className="hover:text-white">(555) 123-4567</a>
@@ -69,7 +69,7 @@ function Footer() {
         <div className="mt-8 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-300">
-              &copy; {new Date().getFullYear()} ServiceConnect Pro. All rights reserved.
+              &copy; {new Date().getFullYear()} Home Swerv. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white">

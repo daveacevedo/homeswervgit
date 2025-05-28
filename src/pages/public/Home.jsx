@@ -8,7 +8,10 @@ import {
   ClipboardDocumentListIcon, 
   CurrencyDollarIcon, 
   SparklesIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  StarIcon,
+  UsersIcon,
+  HandThumbUpIcon
 } from '@heroicons/react/24/outline';
 
 const Home = () => {
@@ -24,7 +27,7 @@ const Home = () => {
           <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 md:justify-start md:space-x-10">
             <div className="flex justify-start lg:w-0 lg:flex-1">
               <Link to="/" className="text-2xl font-bold text-blue-600">
-                ServiceConnectPro
+                Home Swerv
               </Link>
             </div>
             
@@ -80,12 +83,12 @@ const Home = () => {
             </div>
             <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
               <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                <span className="block text-white">Connect with trusted</span>
-                <span className="block text-blue-200">home service professionals</span>
+                <span className="block text-white">Where Home Improvement</span>
+                <span className="block text-blue-200">Meets Community Rewards</span>
               </h1>
               <p className="mt-6 max-w-lg mx-auto text-center text-xl text-white sm:max-w-3xl">
-                Find qualified service providers for your home renovation and maintenance projects. 
-                Get quotes, schedule appointments, and manage your projects all in one place.
+                Find qualified service providers, manage your projects, and earn community rewards 
+                that help you save on future home improvements.
               </p>
               <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
                 <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
@@ -111,6 +114,60 @@ const Home = () => {
       {/* Vision Board Section */}
       <VisionBoard />
 
+      {/* Community Rewards Section */}
+      <div className="bg-blue-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Community Rewards</h2>
+            <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
+              Get rewarded for improving your home
+            </p>
+            <p className="max-w-3xl mt-5 mx-auto text-xl text-gray-500">
+              Home Swerv is the only platform that rewards you for completing home improvement projects and 
+              contributing to the community.
+            </p>
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-6">
+                <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                  <StarIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">Earn Swerv Points</h3>
+                <p className="mt-2 text-base text-gray-500">
+                  Complete projects, leave reviews, and help others to earn Swerv Points that can be redeemed for discounts on future services.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-6">
+                <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                  <UsersIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">Community Challenges</h3>
+                <p className="mt-2 text-base text-gray-500">
+                  Join neighborhood improvement challenges to earn bonus rewards and contribute to community projects that benefit everyone.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-6">
+                <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                  <HandThumbUpIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">Loyalty Benefits</h3>
+                <p className="mt-2 text-base text-gray-500">
+                  The more you use Home Swerv, the more you save. Our tiered loyalty program provides increasing benefits as you complete more projects.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Features section */}
       <div className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,7 +177,7 @@ const Home = () => {
               A better way to manage home projects
             </p>
             <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Our platform connects homeowners with qualified service providers and streamlines the entire project management process.
+              Our platform connects homeowners with qualified service providers, streamlines project management, and rewards you for your home improvements.
             </p>
           </div>
 
@@ -171,14 +228,12 @@ const Home = () => {
               <div className="relative">
                 <dt>
                   <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                    </svg>
+                    <StarIcon className="h-6 w-6" aria-hidden="true" />
                   </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Secure Messaging</p>
+                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Community Rewards</p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Communicate directly with service providers through our secure messaging system, keeping all project communications in one place.
+                  Earn points for completed projects, reviews, and community participation that can be redeemed for discounts on future services.
                 </dd>
               </div>
             </dl>
@@ -190,12 +245,12 @@ const Home = () => {
       <div className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Why Choose ServiceConnectPro</h2>
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Why Choose Home Swerv</h2>
             <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
               Powerful tools for successful home projects
             </p>
             <p className="max-w-3xl mt-5 mx-auto text-xl text-gray-500">
-              Unlike Angi, HomeAdvisor, or Thumbtack, we provide comprehensive planning tools and foster meaningful relationships with qualified service providers.
+              Unlike Angi, HomeAdvisor, or Thumbtack, we provide comprehensive planning tools, foster meaningful relationships with qualified service providers, and reward you for your home improvements.
             </p>
           </div>
 
@@ -302,14 +357,12 @@ const Home = () => {
                   <div className="relative">
                     <dt>
                       <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
+                        <StarIcon className="h-6 w-6" aria-hidden="true" />
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Milestone Tracking</p>
+                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Milestone Rewards</p>
                     </dt>
                     <dd className="mt-2 ml-16 text-base text-gray-500">
-                      Set project milestones, track completion, and celebrate progress as you transform your home.
+                      Set project milestones, track completion, and earn Swerv Points as you transform your home and reach your goals.
                     </dd>
                   </div>
                 </dl>
@@ -365,14 +418,12 @@ const Home = () => {
                 <div className="relative">
                   <dt>
                     <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                      <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+                      <StarIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
-                    <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Verified Providers Only</p>
+                    <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Reward-Based Selection</p>
                   </dt>
                   <dd className="mt-2 ml-16 text-base text-gray-500">
-                    All bidding providers are pre-screened, verified, and reviewed by other homeowners for quality and reliability.
+                    Choose providers who offer bonus Swerv Points for your project, maximizing your rewards while getting quality work done.
                   </dd>
                 </div>
               </dl>
@@ -428,14 +479,12 @@ const Home = () => {
                   <div className="relative">
                     <dt>
                       <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
+                        <StarIcon className="h-6 w-6" aria-hidden="true" />
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Customizable Factors</p>
+                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Reward Forecasting</p>
                     </dt>
                     <dd className="mt-2 ml-16 text-base text-gray-500">
-                      Adjust variables like materials, size, location, and quality to see how they impact your project cost in real-time.
+                      See how many Swerv Points you could earn with different project options, helping you maximize your rewards.
                     </dd>
                   </div>
                 </dl>
@@ -460,7 +509,7 @@ const Home = () => {
           <div className="text-center">
             <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Why We're Different</h2>
             <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-              The ServiceConnectPro Advantage
+              The Home Swerv Advantage
             </p>
             <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
               See how we compare to other home service platforms
@@ -476,7 +525,7 @@ const Home = () => {
                       Features
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      ServiceConnectPro
+                      Home Swerv
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Angi / HomeAdvisor
@@ -605,22 +654,14 @@ const Home = () => {
                   </tr>
                   <tr>
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                      Project Management
+                      Community Rewards
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                       <span className="flex items-center">
                         <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                        <span className="ml-2">Full-featured</span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      <span className="flex items-center">
-                        <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                        <span className="ml-2">Basic</span>
+                        <span className="ml-2">Comprehensive</span>
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
@@ -628,7 +669,15 @@ const Home = () => {
                         <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
-                        <span className="ml-2">Limited</span>
+                        <span className="ml-2">None</span>
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <span className="flex items-center">
+                        <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        <span className="ml-2">None</span>
                       </span>
                     </td>
                   </tr>
@@ -657,7 +706,7 @@ const Home = () => {
             <span className="block">Sign up for free today.</span>
           </h2>
           <p className="mt-4 text-lg leading-6 text-blue-200">
-            Join thousands of homeowners and service providers already using ServiceConnectPro to simplify home project management.
+            Join thousands of homeowners and service providers already using Home Swerv to simplify home project management and earn rewards.
           </p>
           <Link
             to={user ? `/${role}/dashboard` : "/register"}
@@ -699,7 +748,7 @@ const Home = () => {
             </div>
           </nav>
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; 2023 ServiceConnectPro. All rights reserved.
+            &copy; {new Date().getFullYear()} Home Swerv. All rights reserved.
           </p>
         </div>
       </footer>

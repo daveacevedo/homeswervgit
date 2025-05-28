@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { StarIcon, UsersIcon, HandThumbUpIcon } from '@heroicons/react/24/outline';
 
 const About = () => {
   return (
@@ -10,7 +11,7 @@ const About = () => {
           <div className="flex justify-between items-center border-b-2 border-gray-100 py-6 md:justify-start md:space-x-10">
             <div className="flex justify-start lg:w-0 lg:flex-1">
               <Link to="/" className="text-2xl font-bold text-blue-600">
-                ServiceConnectPro
+                Home Swerv
               </Link>
             </div>
             
@@ -96,11 +97,11 @@ const About = () => {
                 About Us
               </span>
               <span className="mt-2 block text-3xl text-center leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                Our Mission and Story
+                Where Home Improvement Meets Community Rewards
               </span>
             </h1>
             <p className="mt-8 text-xl text-gray-500 leading-8">
-              ServiceConnectPro was founded with a simple mission: to transform the way homeowners and service providers connect, communicate, and collaborate on home renovation and maintenance projects.
+              Home Swerv was founded with a simple mission: to transform the way homeowners and service providers connect, communicate, and collaborate on home renovation and maintenance projects while rewarding community participation.
             </p>
           </div>
           <div className="mt-6 prose prose-blue prose-lg text-gray-500 mx-auto">
@@ -109,7 +110,7 @@ const About = () => {
               After experiencing the frustration of managing multiple home renovation projects, our founders recognized a significant gap in the market. Finding reliable contractors, communicating project requirements, tracking progress, and managing payments were all disconnected processes that created unnecessary stress and inefficiency.
             </p>
             <p>
-              In 2020, we set out to build a platform that would address these pain points and create a seamless experience for both homeowners and service providers.
+              In 2023, we set out to build a platform that would address these pain points and create a seamless experience for both homeowners and service providers. But we wanted to go further - we wanted to create a community where home improvement efforts are recognized and rewarded.
             </p>
             
             <div className="my-12 relative">
@@ -129,16 +130,16 @@ const About = () => {
                 <strong>Quality and Excellence:</strong> We are committed to connecting homeowners with skilled professionals who deliver high-quality work and exceptional service.
               </li>
               <li>
-                <strong>Innovation:</strong> We continuously improve our platform with new features and tools that make home project management more efficient and enjoyable.
+                <strong>Community:</strong> We're building a community where homeowners can share ideas, find inspiration, and connect with professionals who share their vision.
               </li>
               <li>
-                <strong>Community:</strong> We're building a community where homeowners can share ideas, find inspiration, and connect with professionals who share their vision.
+                <strong>Recognition and Rewards:</strong> We believe in recognizing and rewarding homeowners for their contributions to improving their homes and communities.
               </li>
             </ul>
             
-            <h2>How We're Different</h2>
+            <h2>The Home Swerv Difference</h2>
             <p>
-              Unlike traditional contractor directories or basic project management tools, ServiceConnectPro offers an end-to-end solution that covers every aspect of home renovation and maintenance:
+              Unlike traditional contractor directories or basic project management tools, Home Swerv offers an end-to-end solution that covers every aspect of home renovation and maintenance, with a unique community rewards program:
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
@@ -151,7 +152,8 @@ const About = () => {
                   <li>Schedule appointments and track project progress</li>
                   <li>Communicate directly with providers</li>
                   <li>Manage payments securely</li>
-                  <li>Store project documentation and warranties</li>
+                  <li>Earn Swerv Points for completed projects</li>
+                  <li>Participate in community challenges for bonus rewards</li>
                 </ul>
               </div>
               
@@ -164,14 +166,58 @@ const About = () => {
                   <li>Create professional quotes and invoices</li>
                   <li>Schedule jobs and coordinate with clients</li>
                   <li>Build your reputation through verified reviews</li>
-                  <li>Grow your business with our marketing tools</li>
+                  <li>Offer Swerv Points incentives to attract customers</li>
+                  <li>Participate in community improvement initiatives</li>
                 </ul>
+              </div>
+            </div>
+            
+            <h2>Our Community Rewards Program</h2>
+            <p>
+              At the heart of Home Swerv is our innovative community rewards program that benefits both homeowners and service providers:
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                    <StarIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">Earn Swerv Points</h3>
+                  <p className="mt-2 text-base text-gray-500">
+                    Complete projects, leave reviews, and help others to earn Swerv Points that can be redeemed for discounts on future services.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                    <UsersIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">Community Challenges</h3>
+                  <p className="mt-2 text-base text-gray-500">
+                    Join neighborhood improvement challenges to earn bonus rewards and contribute to community projects that benefit everyone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="rounded-md bg-blue-100 p-3 inline-flex">
+                    <HandThumbUpIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">Loyalty Benefits</h3>
+                  <p className="mt-2 text-base text-gray-500">
+                    The more you use Home Swerv, the more you save. Our tiered loyalty program provides increasing benefits as you complete more projects.
+                  </p>
+                </div>
               </div>
             </div>
             
             <h2>Our Team</h2>
             <p>
-              Our diverse team brings together expertise in technology, design, construction, and customer service. We're passionate about creating innovative solutions that make home improvement more accessible and enjoyable for everyone.
+              Our diverse team brings together expertise in technology, design, construction, and customer service. We're passionate about creating innovative solutions that make home improvement more accessible, enjoyable, and rewarding for everyone.
             </p>
             
             <div className="my-12 relative">
@@ -184,7 +230,7 @@ const About = () => {
             
             <h2>Join Our Community</h2>
             <p>
-              Whether you're a homeowner planning your next renovation project or a service provider looking to grow your business, we invite you to join the ServiceConnectPro community. Together, we're transforming the home improvement industry and creating better experiences for everyone involved.
+              Whether you're a homeowner planning your next renovation project or a service provider looking to grow your business, we invite you to join the Home Swerv community. Together, we're transforming the home improvement industry and creating better experiences for everyone involved.
             </p>
             
             <div className="mt-10 flex justify-center">
@@ -192,7 +238,7 @@ const About = () => {
                 to="/register"
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
-                Join ServiceConnectPro Today
+                Join Home Swerv Today
               </Link>
             </div>
           </div>
@@ -230,7 +276,7 @@ const About = () => {
             </div>
           </nav>
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; 2023 ServiceConnectPro. All rights reserved.
+            &copy; {new Date().getFullYear()} Home Swerv. All rights reserved.
           </p>
         </div>
       </footer>
