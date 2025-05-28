@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
 
@@ -9,127 +9,154 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get session from local storage on initial load
-    const initialSession = supabase.auth.getSession();
-    setSession(initialSession);
+    // Check for active session on load
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data?.session) {
+          setUser(data.session.user);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (initialSession?.user) {
-      setUser(initialSession.user);
-    }
-
+    checkSession();
+    
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
         setLoading(false);
       }
     );
-
-    // Cleanup subscription on unmount
+    
+    // Clean up subscription
     return () => {
-      if (subscription) subscription.unsubscribe();
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 
-  // Sign up function
-  const signUp = async (email, password) => {
+  // Sign up with email and password
+  const signup = async (email, password, metadata = {}) => {
     try {
+      setError(null);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: metadata
+        }
       });
       
       if (error) throw error;
       
       return { data, error: null };
     } catch (error) {
-      console.error('Error signing up:', error.message);
+      console.error('Error signing up:', error);
+      setError(error.message);
       return { data: null, error };
     }
   };
 
-  // Sign in function
-  const signIn = async (email, password) => {
+  // Sign in with email and password
+  const login = async (email, password) => {
     try {
+      setError(null);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
       
       if (error) throw error;
       
       return { data, error: null };
     } catch (error) {
-      console.error('Error signing in:', error.message);
+      console.error('Error logging in:', error);
+      setError(error.message);
       return { data: null, error };
     }
   };
 
-  // Sign out function
-  const signOut = async () => {
+  // Sign out
+  const logout = async () => {
     try {
+      setError(null);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) throw error;
       
       return { error: null };
     } catch (error) {
-      console.error('Error signing out:', error.message);
+      console.error('Error logging out:', error);
+      setError(error.message);
       return { error };
     }
   };
 
-  // Reset password function
+  // Reset password
   const resetPassword = async (email) => {
     try {
+      setError(null);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`
       });
       
       if (error) throw error;
       
       return { error: null };
     } catch (error) {
-      console.error('Error resetting password:', error.message);
+      console.error('Error resetting password:', error);
+      setError(error.message);
       return { error };
     }
   };
 
-  // Update password function
-  const updatePassword = async (newPassword) => {
+  // Update user
+  const updateUser = async (updates) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+      setError(null);
+      
+      const { data, error } = await supabase.auth.updateUser(updates);
       
       if (error) throw error;
       
-      return { error: null };
+      return { data, error: null };
     } catch (error) {
-      console.error('Error updating password:', error.message);
-      return { error };
+      console.error('Error updating user:', error);
+      setError(error.message);
+      return { data: null, error };
     }
   };
 
   const value = {
     user,
-    session,
     loading,
-    signUp,
-    signIn,
-    signOut,
+    error,
+    signup,
+    login,
+    logout,
     resetPassword,
-    updatePassword,
+    updateUser
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

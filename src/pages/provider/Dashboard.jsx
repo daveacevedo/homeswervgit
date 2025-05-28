@@ -1,124 +1,291 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import { 
+  CalendarIcon, 
+  CurrencyDollarIcon, 
+  UserGroupIcon, 
+  ClockIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  ChartBarIcon
+} from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const ProviderDashboard = () => {
-  const { user, providerProfile, supabase } = useAuth();
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({
-    activeJobs: 0,
+    totalJobs: 0,
+    pendingJobs: 0,
     completedJobs: 0,
-    pendingRequests: 0,
     totalEarnings: 0
   });
-  const [recentJobs, setRecentJobs] = useState([]);
+  const [upcomingJobs, setUpcomingJobs] = useState([]);
+  const [recentReviews, setRecentReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        
-        // This would be replaced with actual data fetching from Supabase
-        // For now, we'll use mock data
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock data
-        setStats({
-          activeJobs: 5,
-          completedJobs: 12,
-          pendingRequests: 3,
-          totalEarnings: 4850
-        });
-        
-        setRecentJobs([
-          {
-            id: 1,
-            title: 'Kitchen Renovation',
-            client: 'John Smith',
-            status: 'In Progress',
-            dueDate: '2023-12-15',
-            amount: 1200
-          },
-          {
-            id: 2,
-            title: 'Bathroom Plumbing',
-            client: 'Sarah Johnson',
-            status: 'In Progress',
-            dueDate: '2023-12-10',
-            amount: 850
-          },
-          {
-            id: 3,
-            title: 'Deck Installation',
-            client: 'Michael Brown',
-            status: 'In Progress',
-            dueDate: '2023-12-20',
-            amount: 2200
-          },
-          {
-            id: 4,
-            title: 'Electrical Wiring',
-            client: 'Emily Davis',
-            status: 'Pending',
-            dueDate: '2023-12-18',
-            amount: 600
-          }
-        ]);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+        fetchProviderData(session.user.id);
       }
     };
-    
-    fetchDashboardData();
-  }, [user]);
+
+    getUser();
+  }, []);
+
+  const fetchProviderData = async (userId) => {
+    try {
+      setLoading(true);
+      
+      // Fetch provider profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) throw profileError;
+      setProfile(profileData);
+      
+      // For demo purposes, we'll use mock data
+      // In a real app, you would fetch this from your database
+      
+      // Mock stats
+      setStats({
+        totalJobs: 24,
+        pendingJobs: 5,
+        completedJobs: 19,
+        totalEarnings: 4850
+      });
+      
+      // Mock upcoming jobs
+      setUpcomingJobs([
+        {
+          id: 1,
+          title: 'Kitchen Renovation',
+          client: 'John Smith',
+          date: new Date(2023, 4, 15, 10, 0),
+          address: '123 Main St, Anytown, CA',
+          status: 'scheduled'
+        },
+        {
+          id: 2,
+          title: 'Bathroom Plumbing',
+          client: 'Sarah Johnson',
+          date: new Date(2023, 4, 16, 14, 30),
+          address: '456 Oak Ave, Somewhere, CA',
+          status: 'confirmed'
+        },
+        {
+          id: 3,
+          title: 'Deck Installation',
+          client: 'Michael Brown',
+          date: new Date(2023, 4, 18, 9, 0),
+          address: '789 Pine Rd, Nowhere, CA',
+          status: 'pending'
+        }
+      ]);
+      
+      // Mock recent reviews
+      setRecentReviews([
+        {
+          id: 1,
+          client: 'Emily Wilson',
+          rating: 5,
+          comment: 'Excellent work! Very professional and completed the job ahead of schedule.',
+          date: new Date(2023, 4, 10)
+        },
+        {
+          id: 2,
+          client: 'David Lee',
+          rating: 4,
+          comment: 'Good quality work and reasonable pricing. Would hire again.',
+          date: new Date(2023, 4, 5)
+        }
+      ]);
+      
+    } catch (error) {
+      console.error('Error fetching provider data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chart data
+  const chartData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Jobs Completed',
+        data: [3, 5, 2, 4, 3, 2],
+        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 1
+      },
+      {
+        label: 'Revenue ($)',
+        data: [750, 1200, 500, 900, 800, 700],
+        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+        borderColor: 'rgb(16, 185, 129)',
+        borderWidth: 1,
+        yAxisID: 'y1'
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Jobs'
+        }
+      },
+      y1: {
+        beginAtZero: true,
+        position: 'right',
+        grid: {
+          drawOnChartArea: false
+        },
+        title: {
+          display: true,
+          text: 'Revenue ($)'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Monthly Performance'
+      }
+    }
+  };
+
+  // Helper function to render stars for ratings
+  const renderStars = (rating) => {
+    return Array(5).fill(0).map((_, i) => (
+      <svg 
+        key={i} 
+        className={`h-5 w-5 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`} 
+        fill="currentColor" 
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ));
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="w-12 h-12 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Provider Dashboard</h1>
-        
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        {/* Welcome section */}
+        <div className="bg-white shadow rounded-lg p-6 mt-6">
+          <h2 className="text-lg font-medium text-gray-900">
+            Welcome back, {profile?.first_name || 'Provider'}!
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Here's what's happening with your business today.
+          </p>
+        </div>
+
         {/* Stats */}
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="p-5">
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                  <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+                <div className="flex-shrink-0">
+                  <CalendarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Active Jobs</dt>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Total Jobs</dt>
                     <dd>
-                      <div className="text-lg font-medium text-gray-900">{stats.activeJobs}</div>
+                      <div className="text-lg font-medium text-gray-900">{stats.totalJobs}</div>
                     </dd>
                   </dl>
                 </div>
               </div>
             </div>
+            <div className="bg-gray-50 px-5 py-3">
+              <div className="text-sm">
+                <Link to="/provider/jobs" className="font-medium text-blue-600 hover:text-blue-500">
+                  View all
+                </Link>
+              </div>
+            </div>
           </div>
-          
+
           <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="p-5">
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                  <svg className="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                <div className="flex-shrink-0">
+                  <ClockIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Pending Jobs</dt>
+                    <dd>
+                      <div className="text-lg font-medium text-gray-900">{stats.pendingJobs}</div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-5 py-3">
+              <div className="text-sm">
+                <Link to="/provider/jobs?status=pending" className="font-medium text-blue-600 hover:text-blue-500">
+                  View pending
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <CheckCircleIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
@@ -130,35 +297,20 @@ const ProviderDashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                  <svg className="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Pending Requests</dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900">{stats.pendingRequests}</div>
-                    </dd>
-                  </dl>
-                </div>
+            <div className="bg-gray-50 px-5 py-3">
+              <div className="text-sm">
+                <Link to="/provider/jobs?status=completed" className="font-medium text-blue-600 hover:text-blue-500">
+                  View completed
+                </Link>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
+            <div className="p-5">
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-indigo-100 rounded-md p-3">
-                  <svg className="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="flex-shrink-0">
+                  <CurrencyDollarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
@@ -170,137 +322,124 @@ const ProviderDashboard = () => {
                 </div>
               </div>
             </div>
+            <div className="bg-gray-50 px-5 py-3">
+              <div className="text-sm">
+                <Link to="/provider/jobs" className="font-medium text-blue-600 hover:text-blue-500">
+                  View details
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-        
-        {/* Recent Jobs */}
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Recent Jobs</h2>
-          <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {recentJobs.map((job) => (
-                <li key={job.id}>
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <p className="text-sm font-medium text-primary-600 truncate">{job.title}</p>
-                        <div className={`ml-2 flex-shrink-0 flex ${
-                          job.status === 'In Progress' ? 'bg-green-100' : 'bg-yellow-100'
-                        } rounded-full px-2 py-0.5`}>
-                          <p className={`text-xs font-medium ${
-                            job.status === 'In Progress' ? 'text-green-800' : 'text-yellow-800'
-                          }`}>
-                            {job.status}
-                          </p>
+
+        {/* Chart and upcoming jobs */}
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {/* Chart */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900">Performance Overview</h3>
+            <div className="mt-4 h-72">
+              <Bar data={chartData} options={chartOptions} />
+            </div>
+          </div>
+
+          {/* Upcoming jobs */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900">Upcoming Jobs</h3>
+              <div className="mt-4 flow-root">
+                <ul className="-my-5 divide-y divide-gray-200">
+                  {upcomingJobs.length > 0 ? (
+                    upcomingJobs.map((job) => (
+                      <li key={job.id} className="py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0">
+                            <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                              <CalendarIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{job.title}</p>
+                            <p className="text-sm text-gray-500 truncate">Client: {job.client}</p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {format(job.date, 'MMM d, yyyy h:mm a')}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">{job.address}</p>
+                          </div>
+                          <div>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                job.status === 'scheduled'
+                                  ? 'bg-green-100 text-green-800'
+                                  : job.status === 'confirmed'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="py-4 text-center text-gray-500">No upcoming jobs</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-5 py-3">
+              <div className="text-sm">
+                <Link to="/provider/calendar" className="font-medium text-blue-600 hover:text-blue-500">
+                  View calendar
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent reviews */}
+        <div className="mt-8 bg-white shadow rounded-lg overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900">Recent Reviews</h3>
+            <div className="mt-4 flow-root">
+              <ul className="-my-5 divide-y divide-gray-200">
+                {recentReviews.length > 0 ? (
+                  recentReviews.map((review) => (
+                    <li key={review.id} className="py-5">
+                      <div className="flex items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="text-sm font-medium text-gray-900">{review.client}</h4>
+                            <span className="ml-2 text-sm text-gray-500">
+                              {format(review.date, 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center">
+                            <div className="flex items-center">
+                              {renderStars(review.rating)}
+                            </div>
+                            <span className="ml-2 text-sm text-gray-500">
+                              {review.rating} out of 5 stars
+                            </span>
+                          </div>
+                          <div className="mt-2 text-sm text-gray-700">
+                            <p>{review.comment}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-2 flex-shrink-0 flex">
-                        <p className="text-sm text-gray-500">Due {new Date(job.dueDate).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                          </svg>
-                          {job.client}
-                        </p>
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        ${job.amount}
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </li>
+                  ))
+                ) : (
+                  <li className="py-5 text-center text-gray-500">No reviews yet</li>
+                )}
+              </ul>
+            </div>
           </div>
-        </div>
-        
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                    <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">Update Profile</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Keep your profile up to date to attract more clients.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        Update Profile
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                    <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">Manage Schedule</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Update your availability and manage appointments.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        View Calendar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-primary-100 rounded-md p-3">
-                    <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">Check Messages</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      You have 3 unread messages from clients.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        View Messages
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="bg-gray-50 px-5 py-3">
+            <div className="text-sm">
+              <Link to="/provider/profile" className="font-medium text-blue-600 hover:text-blue-500">
+                View all reviews
+              </Link>
             </div>
           </div>
         </div>

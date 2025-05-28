@@ -1,292 +1,392 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import { format } from 'date-fns';
+import { 
+  CheckCircleIcon, 
+  ClockIcon, 
+  ExclamationCircleIcon,
+  XCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  ChatBubbleLeftRightIcon
+} from '@heroicons/react/24/outline';
 
-function Jobs() {
-  const { providerProfile } = useAuth()
-  const [jobs, setJobs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  
+const ProviderJobs = () => {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+
   useEffect(() => {
-    if (providerProfile) {
-      fetchJobs()
-    }
-  }, [providerProfile, filter])
-  
+    fetchJobs();
+  }, []);
+
   const fetchJobs = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       
-      let query = supabase
-        .from('projects')
-        .select(`
-          *,
-          services (*),
-          bids (
-            id,
-            provider_id,
-            amount,
-            status,
-            created_at
-          )
-        `)
-        .eq('bids.provider_id', providerProfile.id)
+      // In a real app, you would fetch jobs from your database
+      // For demo purposes, we'll use mock data
       
-      // Apply filters
-      if (filter === 'active') {
-        query = query.eq('status', 'in_progress')
-      } else if (filter === 'completed') {
-        query = query.eq('status', 'completed')
-      } else if (filter === 'pending') {
-        query = query.eq('bids.status', 'pending')
-      }
+      // Mock jobs data
+      const mockJobs = [
+        {
+          id: 1,
+          title: 'Kitchen Renovation',
+          client: 'John Smith',
+          date: new Date(2023, 4, 15, 10, 0),
+          address: '123 Main St, Anytown, CA',
+          status: 'scheduled',
+          price: 3500,
+          description: 'Complete kitchen renovation including new cabinets, countertops, and appliances.'
+        },
+        {
+          id: 2,
+          title: 'Bathroom Plumbing',
+          client: 'Sarah Johnson',
+          date: new Date(2023, 4, 16, 14, 30),
+          address: '456 Oak Ave, Somewhere, CA',
+          status: 'confirmed',
+          price: 850,
+          description: 'Fix leaking pipes and install new shower fixtures.'
+        },
+        {
+          id: 3,
+          title: 'Deck Installation',
+          client: 'Michael Brown',
+          date: new Date(2023, 4, 18, 9, 0),
+          address: '789 Pine Rd, Nowhere, CA',
+          status: 'pending',
+          price: 2200,
+          description: 'Build a new 12x16 wooden deck with railings and stairs.'
+        },
+        {
+          id: 4,
+          title: 'Interior Painting',
+          client: 'Emily Wilson',
+          date: new Date(2023, 4, 5, 13, 0),
+          address: '101 Elm St, Anytown, CA',
+          status: 'completed',
+          price: 1200,
+          description: 'Paint living room, dining room, and hallway. Includes primer and two coats of paint.'
+        },
+        {
+          id: 5,
+          title: 'Roof Repair',
+          client: 'David Lee',
+          date: new Date(2023, 4, 2, 11, 0),
+          address: '202 Cedar Ave, Somewhere, CA',
+          status: 'completed',
+          price: 950,
+          description: 'Repair damaged shingles and fix leak in roof.'
+        },
+        {
+          id: 6,
+          title: 'Fence Installation',
+          client: 'Jennifer Garcia',
+          date: new Date(2023, 4, 20, 8, 0),
+          address: '303 Maple Dr, Nowhere, CA',
+          status: 'pending',
+          price: 1800,
+          description: 'Install 100 feet of 6-foot privacy fence around backyard.'
+        },
+        {
+          id: 7,
+          title: 'Electrical Wiring',
+          client: 'Robert Martinez',
+          date: new Date(2023, 3, 28, 15, 0),
+          address: '404 Birch Ln, Anytown, CA',
+          status: 'completed',
+          price: 750,
+          description: 'Update electrical panel and add new outlets in home office.'
+        },
+        {
+          id: 8,
+          title: 'Landscaping',
+          client: 'Lisa Anderson',
+          date: new Date(2023, 4, 25, 10, 0),
+          address: '505 Spruce Ct, Somewhere, CA',
+          status: 'scheduled',
+          price: 1500,
+          description: 'Redesign front yard with new plants, mulch, and decorative stones.'
+        }
+      ];
       
-      const { data, error } = await query
-      
-      if (error) throw error
-      
-      setJobs(data || [])
+      setJobs(mockJobs);
     } catch (error) {
-      console.error('Error fetching jobs:', error)
+      console.error('Error fetching jobs:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  
-  const handleFilterChange = (newFilter) => {
-    setFilter(newFilter)
-  }
-  
-  const filteredJobs = searchQuery
-    ? jobs.filter(job => 
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.location.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : jobs
-  
-  const getStatusBadgeClass = (status) => {
+  };
+
+  // Filter jobs based on status and search term
+  const filteredJobs = jobs.filter(job => {
+    const matchesFilter = filter === 'all' || job.status === filter;
+    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          job.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          job.address.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Sort jobs
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (sortBy === 'date') {
+      return sortOrder === 'asc' ? a.date - b.date : b.date - a.date;
+    } else if (sortBy === 'price') {
+      return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
+    } else if (sortBy === 'title') {
+      return sortOrder === 'asc' 
+        ? a.title.localeCompare(b.title) 
+        : b.title.localeCompare(a.title);
+    } else if (sortBy === 'client') {
+      return sortOrder === 'asc' 
+        ? a.client.localeCompare(b.client) 
+        : b.client.localeCompare(a.client);
+    }
+    return 0;
+  });
+
+  // Toggle sort order
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  // Get status badge
+  const getStatusBadge = (status) => {
     switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800'
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
+      case 'pending':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <ClockIcon className="mr-1 h-4 w-4" />
+            Pending
+          </span>
+        );
+      case 'confirmed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <CheckCircleIcon className="mr-1 h-4 w-4" />
+            Confirmed
+          </span>
+        );
+      case 'scheduled':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircleIcon className="mr-1 h-4 w-4" />
+            Scheduled
+          </span>
+        );
       case 'completed':
-        return 'bg-gray-100 text-gray-800'
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircleIcon className="mr-1 h-4 w-4" />
+            Completed
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircleIcon className="mr-1 h-4 w-4" />
+            Cancelled
+          </span>
+        );
       default:
-        return 'bg-gray-100 text-gray-800'
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        );
     }
-  }
-  
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString()
-  }
-  
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-  
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center h-full">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
       </div>
-    )
+    );
   }
-  
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your current and past jobs.
-        </p>
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Jobs</h1>
       </div>
-      
-      {/* Filters and Search */}
-      <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center">
-              <div className="flex space-x-1 sm:space-x-2">
-                <button
-                  onClick={() => handleFilterChange('all')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    filter === 'all'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        {/* Filters and search */}
+        <div className="bg-white shadow rounded-lg p-6 mt-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <div>
+                <label htmlFor="filter" className="block text-sm font-medium text-gray-700">
+                  Filter by status
+                </label>
+                <select
+                  id="filter"
+                  name="filter"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
                 >
-                  All Jobs
-                </button>
-                <button
-                  onClick={() => handleFilterChange('active')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    filter === 'active'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                  <option value="all">All Jobs</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="sort" className="block text-sm font-medium text-gray-700">
+                  Sort by
+                </label>
+                <select
+                  id="sort"
+                  name="sort"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setSortOrder('asc');
+                  }}
                 >
-                  Active
-                </button>
-                <button
-                  onClick={() => handleFilterChange('completed')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    filter === 'completed'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                  <option value="date">Date</option>
+                  <option value="price">Price</option>
+                  <option value="title">Job Title</option>
+                  <option value="client">Client Name</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="order" className="block text-sm font-medium text-gray-700">
+                  Order
+                </label>
+                <select
+                  id="order"
+                  name="order"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
                 >
-                  Completed
-                </button>
-                <button
-                  onClick={() => handleFilterChange('pending')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    filter === 'pending'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Pending Bids
-                </button>
+                  <option value="asc">Ascending</option>
+                  <option value="desc">Descending</option>
+                </select>
+              </div>
+            </div>
+            <div className="w-full md:w-64">
+              <label htmlFor="search" className="block text-sm font-medium text-gray-700">
+                Search
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md"
+                  placeholder="Search jobs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
-          <div className="mt-4 md:mt-0">
-            <form className="flex rounded-md shadow-sm">
-              <input
-                type="text"
-                name="search"
-                id="search"
-                className="focus:ring-primary-500 focus:border-primary-500 block w-full rounded-md sm:text-sm border-gray-300"
-                placeholder="Search jobs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Search
-              </button>
-            </form>
+        </div>
+
+        {/* Jobs list */}
+        <div className="mt-8">
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul className="divide-y divide-gray-200">
+              {sortedJobs.length > 0 ? (
+                sortedJobs.map((job) => (
+                  <li key={job.id}>
+                    <div className="px-4 py-4 sm:px-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <p className="text-sm font-medium text-blue-600 truncate">{job.title}</p>
+                          <div className="ml-2">
+                            {getStatusBadge(job.status)}
+                          </div>
+                        </div>
+                        <div className="ml-2 flex-shrink-0 flex">
+                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${job.price}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 sm:flex sm:justify-between">
+                        <div className="sm:flex">
+                          <p className="flex items-center text-sm text-gray-500">
+                            Client: {job.client}
+                          </p>
+                          <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                            {job.address}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                          <p>
+                            {format(job.date, 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-700">
+                        <p>{job.description}</p>
+                      </div>
+                      <div className="mt-3 flex justify-end space-x-3">
+                        <button
+                          type="button"
+                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <EyeIcon className="mr-1 h-4 w-4" />
+                          View Details
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <ChatBubbleLeftRightIcon className="mr-1 h-4 w-4" />
+                          Message Client
+                        </button>
+                        {job.status !== 'completed' && job.status !== 'cancelled' && (
+                          <>
+                            <button
+                              type="button"
+                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              <PencilIcon className="mr-1 h-4 w-4" />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                              <XCircleIcon className="mr-1 h-4 w-4" />
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="px-4 py-6 text-center text-gray-500">
+                  No jobs found matching your criteria
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </div>
-      
-      {/* Jobs List */}
-      {filteredJobs.length > 0 ? (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <ul className="divide-y divide-gray-200">
-            {filteredJobs.map((job) => (
-              <li key={job.id}>
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                          <span className="text-primary-600 font-medium">
-                            {job.title.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
-                        <div className="flex items-center mt-1">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(job.status)}`}>
-                            {job.status === 'open' ? 'Open' : 
-                             job.status === 'in_progress' ? 'In Progress' : 
-                             job.status === 'completed' ? 'Completed' : 
-                             job.status}
-                          </span>
-                          <span className="ml-2 text-sm text-gray-500">
-                            {job.services?.name || 'General'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <Link
-                        to={`/jobs/${job.id}`}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500 line-clamp-2">
-                      {job.description}
-                    </p>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        {job.location || 'No location specified'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        {formatDate(job.created_at)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        {job.bids && job.bids.length > 0 
-                          ? formatCurrency(job.bids[0].amount) 
-                          : 'No bid submitted'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No jobs found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {filter !== 'all' 
-                ? `You don't have any ${filter} jobs.` 
-                : 'You haven\'t been assigned any jobs yet.'}
-            </p>
-            <div className="mt-6">
-              <Link
-                to="/leads"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Browse Available Leads
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  )
-}
+  );
+};
 
-export default Jobs
+export default ProviderJobs;

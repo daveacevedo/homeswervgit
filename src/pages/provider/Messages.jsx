@@ -1,351 +1,652 @@
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { format } from 'date-fns';
+import { 
+  PaperAirplaneIcon, 
+  PaperClipIcon,
+  EllipsisHorizontalIcon,
+  MagnifyingGlassIcon
+} from '@heroicons/react/24/outline';
 
-function Messages() {
-  const { user, providerProfile } = useAuth()
-  const [conversations, setConversations] = useState([])
-  const [activeConversation, setActiveConversation] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [newMessage, setNewMessage] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [sendingMessage, setSendingMessage] = useState(false)
-  const messagesEndRef = useRef(null)
-  
+const ProviderMessages = () => {
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
   useEffect(() => {
-    if (providerProfile) {
-      fetchConversations()
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation.id);
     }
-  }, [providerProfile])
-  
-  useEffect(() => {
-    if (activeConversation) {
-      fetchMessages(activeConversation.id)
-      
-      // Subscribe to new messages
-      const subscription = supabase
-        .channel(`conversation:${activeConversation.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${activeConversation.id}`
-        }, (payload) => {
-          setMessages(current => [...current, payload.new])
-        })
-        .subscribe()
-      
-      return () => {
-        supabase.removeChannel(subscription)
-      }
-    }
-  }, [activeConversation])
-  
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-  
+  }, [selectedConversation]);
+
   const fetchConversations = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          homeowner:homeowner_id (
-            id,
-            first_name,
-            last_name,
-            email
-          ),
-          provider:provider_id (
-            id,
-            business_name,
-            contact_name,
-            email
-          ),
-          project:project_id (
-            id,
-            title
-          ),
-          messages (
-            id,
-            created_at,
-            content
-          )
-        `)
-        .eq('provider_id', providerProfile.id)
-        .order('updated_at', { ascending: false })
+      // In a real app, you would fetch conversations from your database
+      // For demo purposes, we'll use mock data
       
-      if (error) throw error
+      // Mock conversations data
+      const mockConversations = [
+        {
+          id: 1,
+          client: {
+            id: 101,
+            name: 'John Smith',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          },
+          lastMessage: {
+            text: 'When can you come to look at the kitchen?',
+            timestamp: new Date(2023, 4, 10, 14, 30),
+            isRead: true,
+            sender: 'client'
+          },
+          project: 'Kitchen Renovation',
+          unreadCount: 0
+        },
+        {
+          id: 2,
+          client: {
+            id: 102,
+            name: 'Sarah Johnson',
+            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          },
+          lastMessage: {
+            text: 'The bathroom looks great! Thank you for your work.',
+            timestamp: new Date(2023, 4, 9, 10, 15),
+            isRead: true,
+            sender: 'client'
+          },
+          project: 'Bathroom Remodel',
+          unreadCount: 0
+        },
+        {
+          id: 3,
+          client: {
+            id: 103,
+            name: 'Michael Brown',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          },
+          lastMessage: {
+            text: 'I have a question about the quote you sent.',
+            timestamp: new Date(2023, 4, 11, 9, 45),
+            isRead: false,
+            sender: 'client'
+          },
+          project: 'Deck Installation',
+          unreadCount: 2
+        },
+        {
+          id: 4,
+          client: {
+            id: 104,
+            name: 'Emily Wilson',
+            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          },
+          lastMessage: {
+            text: 'Can we schedule the painting for next week?',
+            timestamp: new Date(2023, 4, 8, 16, 20),
+            isRead: true,
+            sender: 'client'
+          },
+          project: 'Interior Painting',
+          unreadCount: 0
+        },
+        {
+          id: 5,
+          client: {
+            id: 105,
+            name: 'David Lee',
+            avatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+          },
+          lastMessage: {
+            text: 'I just sent the payment for the roof repair.',
+            timestamp: new Date(2023, 4, 7, 11, 10),
+            isRead: true,
+            sender: 'client'
+          },
+          project: 'Roof Repair',
+          unreadCount: 0
+        }
+      ];
       
-      setConversations(data || [])
+      setConversations(mockConversations);
       
-      // Set first conversation as active if there are any
-      if (data && data.length > 0 && !activeConversation) {
-        setActiveConversation(data[0])
+      // Select the first conversation by default
+      if (mockConversations.length > 0 && !selectedConversation) {
+        setSelectedConversation(mockConversations[0]);
       }
+      
     } catch (error) {
-      console.error('Error fetching conversations:', error)
+      console.error('Error fetching conversations:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  
+  };
+
   const fetchMessages = async (conversationId) => {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:sender_id (
-            id,
-            email
-          )
-        `)
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true })
+      // In a real app, you would fetch messages from your database
+      // For demo purposes, we'll use mock data
       
-      if (error) throw error
-      
-      setMessages(data || [])
-      
-      // Mark messages as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('conversation_id', conversationId)
-        .eq('sender_id', 'not.eq', user.id)
-        .eq('is_read', false)
-    } catch (error) {
-      console.error('Error fetching messages:', error)
-    }
-  }
-  
-  const handleSendMessage = async (e) => {
-    e.preventDefault()
-    
-    if (!newMessage.trim() || !activeConversation) return
-    
-    try {
-      setSendingMessage(true)
-      
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([
+      // Mock messages data
+      const mockMessages = {
+        1: [
           {
-            conversation_id: activeConversation.id,
-            sender_id: user.id,
-            content: newMessage.trim(),
-            is_read: false
+            id: 1,
+            text: 'Hi, I\'m interested in renovating my kitchen. Do you offer free consultations?',
+            timestamp: new Date(2023, 4, 9, 9, 30),
+            sender: 'client'
+          },
+          {
+            id: 2,
+            text: 'Yes, we do offer free consultations. I\'d be happy to come take a look at your kitchen and discuss your renovation ideas.',
+            timestamp: new Date(2023, 4, 9, 10, 15),
+            sender: 'provider'
+          },
+          {
+            id: 3,
+            text: 'Great! When would you be available?',
+            timestamp: new Date(2023, 4, 9, 10, 45),
+            sender: 'client'
+          },
+          {
+            id: 4,
+            text: 'I have availability this Thursday or Friday afternoon. Would either of those work for you?',
+            timestamp: new Date(2023, 4, 9, 11, 30),
+            sender: 'provider'
+          },
+          {
+            id: 5,
+            text: 'Friday afternoon would work well. How about 2 PM?',
+            timestamp: new Date(2023, 4, 9, 14, 0),
+            sender: 'client'
+          },
+          {
+            id: 6,
+            text: '2 PM on Friday works for me. I\'ll put it on my calendar. Could you please provide your address?',
+            timestamp: new Date(2023, 4, 9, 14, 45),
+            sender: 'provider'
+          },
+          {
+            id: 7,
+            text: '123 Main St, Anytown, CA. Thanks!',
+            timestamp: new Date(2023, 4, 9, 15, 30),
+            sender: 'client'
+          },
+          {
+            id: 8,
+            text: 'When can you come to look at the kitchen?',
+            timestamp: new Date(2023, 4, 10, 14, 30),
+            sender: 'client'
           }
-        ])
-        .select()
+        ],
+        2: [
+          {
+            id: 1,
+            text: 'Hello, I\'m interested in remodeling my bathroom. Can you help with that?',
+            timestamp: new Date(2023, 4, 5, 13, 0),
+            sender: 'client'
+          },
+          {
+            id: 2,
+            text: 'Hi Sarah, yes we specialize in bathroom remodels. What kind of changes are you looking to make?',
+            timestamp: new Date(2023, 4, 5, 14, 30),
+            sender: 'provider'
+          },
+          {
+            id: 3,
+            text: 'I want to replace the tub with a walk-in shower, new vanity, and update the flooring and lighting.',
+            timestamp: new Date(2023, 4, 5, 15, 0),
+            sender: 'client'
+          },
+          {
+            id: 4,
+            text: 'That sounds like a great project. I can come by to take measurements and provide a quote. When would be a good time?',
+            timestamp: new Date(2023, 4, 6, 9, 0),
+            sender: 'provider'
+          },
+          {
+            id: 5,
+            text: 'How about next Monday at 10 AM?',
+            timestamp: new Date(2023, 4, 6, 10, 30),
+            sender: 'client'
+          },
+          {
+            id: 6,
+            text: 'Monday at 10 AM works for me. I\'ll see you then!',
+            timestamp: new Date(2023, 4, 6, 11, 15),
+            sender: 'provider'
+          },
+          {
+            id: 7,
+            text: 'The bathroom looks great! Thank you for your work.',
+            timestamp: new Date(2023, 4, 9, 10, 15),
+            sender: 'client'
+          }
+        ],
+        3: [
+          {
+            id: 1,
+            text: 'Hi, I\'m interested in getting a deck built in my backyard. Can you provide a quote?',
+            timestamp: new Date(2023, 4, 10, 15, 0),
+            sender: 'client'
+          },
+          {
+            id: 2,
+            text: 'Hello Michael, I\'d be happy to provide a quote for your deck. Could you tell me the approximate size you\'re looking for?',
+            timestamp: new Date(2023, 4, 10, 16, 30),
+            sender: 'provider'
+          },
+          {
+            id: 3,
+            text: 'I\'m thinking about a 12x16 deck with railings and stairs.',
+            timestamp: new Date(2023, 4, 10, 17, 0),
+            sender: 'client'
+          },
+          {
+            id: 4,
+            text: 'Thanks for the information. I\'ve prepared a quote based on your requirements. I\'ll send it over shortly.',
+            timestamp: new Date(2023, 4, 11, 9, 0),
+            sender: 'provider'
+          },
+          {
+            id: 5,
+            text: 'I\'ve sent the quote to your email. Please let me know if you have any questions.',
+            timestamp: new Date(2023, 4, 11, 9, 15),
+            sender: 'provider'
+          },
+          {
+            id: 6,
+            text: 'I have a question about the quote you sent.',
+            timestamp: new Date(2023, 4, 11, 9, 45),
+            sender: 'client'
+          }
+        ],
+        4: [
+          {
+            id: 1,
+            text: 'Hello, I need to get my living room, dining room, and hallway painted. Do you have availability in the next few weeks?',
+            timestamp: new Date(2023, 4, 7, 10, 0),
+            sender: 'client'
+          },
+          {
+            id: 2,
+            text: 'Hi Emily, yes I have some availability coming up. What colors are you thinking of using?',
+            timestamp: new Date(2023, 4, 7, 11, 30),
+            sender: 'provider'
+          },
+          {
+            id: 3,
+            text: 'I\'m thinking of a light gray for the living room and hallway, and a sage green for the dining room.',
+            timestamp: new Date(2023, 4, 7, 13, 0),
+            sender: 'client'
+          },
+          {
+            id: 4,
+            text: 'Those colors sound nice. I can provide a quote if you let me know the approximate square footage or dimensions of the rooms.',
+            timestamp: new Date(2023, 4, 7, 14, 30),
+            sender: 'provider'
+          },
+          {
+            id: 5,
+            text: 'The living room is about 15x20, dining room is 12x14, and the hallway is about 30 feet long and 4 feet wide.',
+            timestamp: new Date(2023, 4, 7, 15, 45),
+            sender: 'client'
+          },
+          {
+            id: 6,
+            text: 'Thanks for the information. Based on those dimensions, I estimate it would take about 3-4 days to complete the job. I have availability starting the week after next.',
+            timestamp: new Date(2023, 4, 8, 9, 0),
+            sender: 'provider'
+          },
+          {
+            id: 7,
+            text: 'Can we schedule the painting for next week?',
+            timestamp: new Date(2023, 4, 8, 16, 20),
+            sender: 'client'
+          }
+        ],
+        5: [
+          {
+            id: 1,
+            text: 'Hi, I have a leak in my roof that needs to be repaired. Can you help?',
+            timestamp: new Date(2023, 4, 5, 9, 0),
+            sender: 'client'
+          },
+          {
+            id: 2,
+            text: 'Hello David, I can definitely help with your roof leak. Is it causing any damage inside your home?',
+            timestamp: new Date(2023, 4, 5, 10, 30),
+            sender: 'provider'
+          },
+          {
+            id: 3,
+            text: 'Yes, there\'s a water stain on the ceiling in my upstairs bedroom.',
+            timestamp: new Date(2023, 4, 5, 11, 15),
+            sender: 'client'
+          },
+          {
+            id: 4,
+            text: 'I understand. This sounds like it needs prompt attention. I can come by tomorrow to assess the damage and provide a quote. Would that work for you?',
+            timestamp: new Date(2023, 4, 5, 13, 0),
+            sender: 'provider'
+          },
+          {
+            id: 5,
+            text: 'Tomorrow would be great. I\'m available all day.',
+            timestamp: new Date(2023, 4, 5, 14, 30),
+            sender: 'client'
+          },
+          {
+            id: 6,
+            text: 'Perfect. I\'ll be there around 10 AM if that works for you.',
+            timestamp: new Date(2023, 4, 5, 15, 0),
+            sender: 'provider'
+          },
+          {
+            id: 7,
+            text: '10 AM is perfect. See you then.',
+            timestamp: new Date(2023, 4, 5, 15, 30),
+            sender: 'client'
+          },
+          {
+            id: 8,
+            text: 'I\'ve completed the roof repair. The leak was caused by damaged shingles, which I\'ve replaced. I\'ve also sealed the area to prevent future leaks.',
+            timestamp: new Date(2023, 4, 6, 16, 0),
+            sender: 'provider'
+          },
+          {
+            id: 9,
+            text: 'Thank you for the quick service. How much do I owe you?',
+            timestamp: new Date(2023, 4, 6, 17, 30),
+            sender: 'client'
+          },
+          {
+            id: 10,
+            text: 'The total comes to $950. I\'ve sent an invoice to your email.',
+            timestamp: new Date(2023, 4, 6, 18, 0),
+            sender: 'provider'
+          },
+          {
+            id: 11,
+            text: 'I just sent the payment for the roof repair.',
+            timestamp: new Date(2023, 4, 7, 11, 10),
+            sender: 'client'
+          }
+        ]
+      };
       
-      if (error) throw error
+      setMessages(mockMessages[conversationId] || []);
       
-      // Update conversation's updated_at timestamp
-      await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', activeConversation.id)
-      
-      setNewMessage('')
     } catch (error) {
-      console.error('Error sending message:', error)
-    } finally {
-      setSendingMessage(false)
+      console.error('Error fetching messages:', error);
     }
-  }
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    
+    if (!newMessage.trim() || !selectedConversation) return;
+    
+    // In a real app, you would save the message to your database
+    // For demo purposes, we'll just add it to the local state
+    
+    const newMessageObj = {
+      id: messages.length + 1,
+      text: newMessage,
+      timestamp: new Date(),
+      sender: 'provider'
+    };
+    
+    setMessages([...messages, newMessageObj]);
+    
+    // Update the conversation with the new last message
+    setConversations(conversations.map(conv => 
+      conv.id === selectedConversation.id
+        ? {
+            ...conv,
+            lastMessage: {
+              text: newMessage,
+              timestamp: new Date(),
+              isRead: true,
+              sender: 'provider'
+            }
+          }
+        : conv
+    ));
+    
+    setNewMessage('');
+  };
+
+  // Format timestamp
+  const formatMessageTime = (timestamp) => {
+    return format(timestamp, 'h:mm a');
+  };
   
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-  
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleString()
-  }
-  
-  const getLastMessage = (conversation) => {
-    if (!conversation.messages || conversation.messages.length === 0) {
-      return 'No messages yet'
+  const formatConversationTime = (timestamp) => {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+    
+    // If the message is from today, show the time
+    if (messageDate.toDateString() === now.toDateString()) {
+      return format(messageDate, 'h:mm a');
     }
     
-    const lastMessage = conversation.messages[conversation.messages.length - 1]
-    return lastMessage.content.length > 30
-      ? `${lastMessage.content.substring(0, 30)}...`
-      : lastMessage.content
-  }
-  
-  const getUnreadCount = (conversation) => {
-    if (!conversation.messages) return 0
+    // If the message is from this week, show the day
+    const diffDays = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return format(messageDate, 'EEEE');
+    }
     
-    return conversation.messages.filter(
-      message => !message.is_read && message.sender_id !== user.id
-    ).length
-  }
-  
+    // Otherwise, show the date
+    return format(messageDate, 'MMM d');
+  };
+
+  // Filter conversations based on search term
+  const filteredConversations = conversations.filter(conv => 
+    conv.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conv.project.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading && conversations.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center h-full">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
       </div>
-    )
+    );
   }
-  
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Communicate with homeowners about their projects.
-        </p>
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Messages</h1>
       </div>
-      
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="h-[calc(100vh-250px)] flex">
-          {/* Conversations List */}
-          <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Conversations</h2>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="flex h-[calc(100vh-200px)]">
+            {/* Conversation list */}
+            <div className="w-1/3 border-r border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Search conversations"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto h-full pb-20">
+                <ul className="divide-y divide-gray-200">
+                  {filteredConversations.map((conversation) => (
+                    <li
+                      key={conversation.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedConversation?.id === conversation.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => setSelectedConversation(conversation)}
+                    >
+                      <div className="px-4 py-4 sm:px-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 relative">
+                              <img
+                                className="h-10 w-10 rounded-full"
+                                src={conversation.client.avatar}
+                                alt={conversation.client.name}
+                              />
+                              {conversation.unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                  {conversation.unreadCount}
+                                </span>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="flex items-center">
+                                <h3 className="text-sm font-medium text-gray-900">{conversation.client.name}</h3>
+                                <span className="ml-2 text-xs text-gray-500">
+                                  {formatConversationTime(conversation.lastMessage.timestamp)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-500 truncate">{conversation.project}</p>
+                              <p className={`text-sm truncate ${
+                                conversation.unreadCount > 0 ? 'font-semibold text-gray-900' : 'text-gray-500'
+                              }`}>
+                                {conversation.lastMessage.sender === 'provider' ? 'You: ' : ''}
+                                {conversation.lastMessage.text}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
             
-            {conversations.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {conversations.map((conversation) => (
-                  <li
-                    key={conversation.id}
-                    className={`hover:bg-gray-50 cursor-pointer ${
-                      activeConversation?.id === conversation.id ? 'bg-gray-50' : ''
-                    }`}
-                    onClick={() => setActiveConversation(conversation)}
-                  >
-                    <div className="px-4 py-4">
-                      <div className="flex justify-between">
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {conversation.homeowner?.first_name} {conversation.homeowner?.last_name}
-                        </h3>
-                        <span className="text-xs text-gray-500">
-                          {new Date(conversation.updated_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-500 truncate">
-                        {conversation.project?.title || 'No project'}
-                      </p>
-                      <div className="mt-2 flex justify-between">
-                        <p className="text-sm text-gray-500 truncate">
-                          {getLastMessage(conversation)}
-                        </p>
-                        {getUnreadCount(conversation) > 0 && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                            {getUnreadCount(conversation)}
-                          </span>
-                        )}
+            {/* Message area */}
+            <div className="w-2/3 flex flex-col">
+              {selectedConversation ? (
+                <>
+                  {/* Conversation header */}
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <img
+                        className="h-10 w-10 rounded-full"
+                        src={selectedConversation.client.avatar}
+                        alt={selectedConversation.client.name}
+                      />
+                      <div className="ml-4">
+                        <h3 className="text-sm font-medium text-gray-900">{selectedConversation.client.name}</h3>
+                        <p className="text-sm text-gray-500">{selectedConversation.project}</p>
                       </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-gray-500">No conversations yet.</p>
-              </div>
-            )}
-          </div>
-          
-          {/* Messages */}
-          <div className="w-2/3 flex flex-col">
-            {activeConversation ? (
-              <>
-                <div className="px-4 py-3 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-medium text-gray-900">
-                        {activeConversation.homeowner?.first_name} {activeConversation.homeowner?.last_name}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {activeConversation.project?.title || 'No project'}
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <EllipsisHorizontalIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
                   </div>
-                </div>
-                
-                <div className="flex-1 p-4 overflow-y-auto">
-                  {messages.length > 0 ? (
+                  
+                  {/* Messages */}
+                  <div className="flex-1 p-4 overflow-y-auto">
                     <div className="space-y-4">
                       {messages.map((message) => (
                         <div
                           key={message.id}
-                          className={`flex ${
-                            message.sender_id === user.id ? 'justify-end' : 'justify-start'
-                          }`}
+                          className={`flex ${message.sender === 'provider' ? 'justify-end' : 'justify-start'}`}
                         >
+                          {message.sender === 'client' && (
+                            <img
+                              className="h-8 w-8 rounded-full mr-2 self-end"
+                              src={selectedConversation.client.avatar}
+                              alt={selectedConversation.client.name}
+                            />
+                          )}
                           <div
-                            className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
-                              message.sender_id === user.id
-                                ? 'bg-primary-100 text-primary-800'
-                                : 'bg-gray-100 text-gray-800'
+                            className={`rounded-lg px-4 py-2 max-w-xs sm:max-w-md ${
+                              message.sender === 'provider'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-900'
                             }`}
                           >
-                            <p className="text-sm">{message.content}</p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {formatDate(message.created_at)}
+                            <p className="text-sm">{message.text}</p>
+                            <p
+                              className={`text-xs mt-1 text-right ${
+                                message.sender === 'provider' ? 'text-blue-200' : 'text-gray-500'
+                              }`}
+                            >
+                              {formatMessageTime(message.timestamp)}
                             </p>
                           </div>
+                          {message.sender === 'provider' && (
+                            <img
+                              className="h-8 w-8 rounded-full ml-2 self-end"
+                              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                              alt="You"
+                            />
+                          )}
                         </div>
                       ))}
-                      <div ref={messagesEndRef} />
                     </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <p className="text-sm text-gray-500">No messages yet. Start the conversation!</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="px-4 py-3 border-t border-gray-200">
-                  <form onSubmit={handleSendMessage}>
-                    <div className="flex">
+                  </div>
+                  
+                  {/* Message input */}
+                  <div className="p-4 border-t border-gray-200">
+                    <form onSubmit={handleSendMessage} className="flex items-center">
+                      <button
+                        type="button"
+                        className="inline-flex items-center p-2 border border-transparent rounded-full text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <PaperClipIcon className="h-5 w-5" aria-hidden="true" />
+                      </button>
                       <input
                         type="text"
-                        name="message"
-                        id="message"
-                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        className="block w-full mx-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         placeholder="Type a message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        disabled={sendingMessage}
                       />
                       <button
                         type="submit"
-                        className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                        disabled={!newMessage.trim() || sendingMessage}
+                        disabled={!newMessage.trim()}
+                        className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {sendingMessage ? (
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          'Send'
-                        )}
+                        <PaperAirplaneIcon className="h-5 w-5" aria-hidden="true" />
                       </button>
-                    </div>
-                  </form>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-gray-900">No conversation selected</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Select a conversation from the list to view messages.
+                    </p>
+                  </div>
                 </div>
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500">Select a conversation to view messages</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Messages
+export default ProviderMessages;

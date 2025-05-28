@@ -1,15 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    }
-  },
   // Add optimizeDeps configuration to help with dependency pre-bundling
   optimizeDeps: {
     include: [
@@ -17,53 +11,34 @@ export default defineConfig({
       'react-dom',
       'react-router-dom',
       '@headlessui/react',
+      '@heroicons/react',
       'chart.js',
       'react-chartjs-2',
       'date-fns'
     ]
   },
-  // Improved build optimization with better chunking strategy
+  // Reduce build optimization to avoid potential deadlocks
   build: {
     sourcemap: true,
     minify: 'esbuild',
-    chunkSizeWarningLimit: 600, // Increase the warning limit slightly
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core libraries
-          'react-core': ['react', 'react-dom'],
-          
-          // Routing
-          'router': ['react-router-dom'],
-          
-          // UI components
-          'ui-components': ['@headlessui/react'],
-          
-          // Form handling
-          'forms': ['react-hook-form'],
-          
-          // Data visualization
-          'charts': ['chart.js', 'react-chartjs-2'],
-          
-          // Date utilities
-          'date-utils': ['date-fns'],
-          
-          // Supabase related
-          'supabase': ['@supabase/supabase-js']
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@headlessui/react', '@heroicons/react'],
+          charts: ['chart.js', 'react-chartjs-2']
         }
       }
     }
   },
-  // Configure server to use a specific port and fix timeout issues
+  // Increase memory limit for Node.js
   server: {
-    port: 5174, // Set a specific port to avoid conflicts
-    strictPort: false, // Allow Vite to try another port if this one is in use
     hmr: {
-      overlay: true,
-      timeout: 60000 // Increase timeout to 60 seconds
+      overlay: false
     },
-    watch: {
-      usePolling: false
-    }
+    host: true, // Listen on all addresses
+    port: 5173, // Specify a port
+    strictPort: false, // Allow fallback to another port if 5173 is taken
+    open: true // Open browser automatically
   }
 })

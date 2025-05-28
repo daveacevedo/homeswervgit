@@ -19,7 +19,12 @@
     - Add policy for admins to read all profiles
 */
 
-CREATE TABLE IF NOT EXISTS profiles (
+-- Drop existing tables if they exist to avoid conflicts
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS profiles;
+
+-- Create the profiles table
+CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
   full_name TEXT,
   email TEXT,

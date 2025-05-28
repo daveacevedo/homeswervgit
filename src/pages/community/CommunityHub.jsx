@@ -1,246 +1,338 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { 
+  ChatBubbleLeftRightIcon, 
+  HeartIcon, 
+  ShareIcon,
+  HandThumbUpIcon,
+  UserGroupIcon,
+  PhotoIcon,
+  MagnifyingGlassIcon
+} from '@heroicons/react/24/outline';
 
 const CommunityHub = () => {
-  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchCommunityData = async () => {
-      try {
-        setLoading(true);
-        
-        // This would be replaced with actual data fetching from Supabase
-        // For now, we'll use mock data
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock categories
-        setCategories([
-          { id: 'kitchen', name: 'Kitchen' },
-          { id: 'bathroom', name: 'Bathroom' },
-          { id: 'outdoor', name: 'Outdoor' },
-          { id: 'living', name: 'Living Room' },
-          { id: 'bedroom', name: 'Bedroom' },
-          { id: 'basement', name: 'Basement' }
-        ]);
-        
-        // Mock projects
-        setProjects([
-          {
-            id: 1,
-            title: 'Modern Kitchen Renovation',
-            description: 'Complete kitchen remodel with custom cabinets and quartz countertops.',
-            category: 'kitchen',
-            image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'John Smith',
-            likes: 42,
-            comments: 12,
-            date: '2023-11-15'
-          },
-          {
-            id: 2,
-            title: 'Backyard Patio Makeover',
-            description: 'Transformed our backyard with a new paver patio, pergola, and fire pit.',
-            category: 'outdoor',
-            image: 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'Sarah Johnson',
-            likes: 38,
-            comments: 8,
-            date: '2023-11-10'
-          },
-          {
-            id: 3,
-            title: 'Spa-Like Bathroom Remodel',
-            description: 'Complete bathroom renovation with walk-in shower, freestanding tub, and heated floors.',
-            category: 'bathroom',
-            image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'Michael Brown',
-            likes: 56,
-            comments: 15,
-            date: '2023-11-05'
-          },
-          {
-            id: 4,
-            title: 'Cozy Living Room Redesign',
-            description: 'Updated our living room with new furniture, lighting, and a custom built-in entertainment center.',
-            category: 'living',
-            image: 'https://images.pexels.com/photos/1571468/pexels-photo-1571468.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'Emily Davis',
-            likes: 29,
-            comments: 7,
-            date: '2023-10-28'
-          },
-          {
-            id: 5,
-            title: 'Master Bedroom Retreat',
-            description: 'Transformed our master bedroom with a new color scheme, furniture, and custom closet system.',
-            category: 'bedroom',
-            image: 'https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'Robert Wilson',
-            likes: 34,
-            comments: 9,
-            date: '2023-10-20'
-          },
-          {
-            id: 6,
-            title: 'Basement Home Theater',
-            description: 'Converted our unfinished basement into a home theater with custom seating and sound system.',
-            category: 'basement',
-            image: 'https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-            author: 'Jennifer Lee',
-            likes: 47,
-            comments: 14,
-            date: '2023-10-15'
-          }
-        ]);
-      } catch (error) {
-        console.error('Error fetching community data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCommunityData();
+    fetchProjects();
   }, []);
 
-  const filteredProjects = selectedCategory === 'all'
-    ? projects
-    : projects.filter(project => project.category === selectedCategory);
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      
+      // In a real app, you would fetch projects from your database
+      // For demo purposes, we'll use mock data
+      
+      // Mock projects data
+      const mockProjects = [
+        {
+          id: 1,
+          title: 'Modern Kitchen Renovation',
+          description: 'Complete kitchen renovation with custom cabinets, quartz countertops, and new appliances.',
+          author: 'John Smith',
+          authorRole: 'homeowner',
+          authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 3, 15),
+          category: 'kitchen',
+          images: [
+            'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 24,
+          comments: 8,
+          shares: 3
+        },
+        {
+          id: 2,
+          title: 'Backyard Deck and Landscaping',
+          description: 'Built a new cedar deck and completely redesigned the backyard with native plants and a stone pathway.',
+          author: 'Sarah Johnson',
+          authorRole: 'homeowner',
+          authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 3, 20),
+          category: 'outdoor',
+          images: [
+            'https://images.pexels.com/photos/5997993/pexels-photo-5997993.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 32,
+          comments: 12,
+          shares: 5
+        },
+        {
+          id: 3,
+          title: 'Bathroom Remodel Tips',
+          description: 'Professional tips for remodeling your bathroom on a budget while still achieving a luxury look.',
+          author: 'Michael Brown',
+          authorRole: 'provider',
+          authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 3, 25),
+          category: 'bathroom',
+          images: [
+            'https://images.pexels.com/photos/6585598/pexels-photo-6585598.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 45,
+          comments: 18,
+          shares: 10
+        },
+        {
+          id: 4,
+          title: 'DIY Living Room Makeover',
+          description: 'How I transformed my living room with just paint, new curtains, and rearranging furniture. Budget-friendly tips included!',
+          author: 'Emily Wilson',
+          authorRole: 'homeowner',
+          authorAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 4, 2),
+          category: 'living',
+          images: [
+            'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 38,
+          comments: 15,
+          shares: 7
+        },
+        {
+          id: 5,
+          title: 'Energy-Efficient Home Upgrades',
+          description: 'Sharing my experience installing solar panels, upgrading insulation, and replacing windows to create an energy-efficient home.',
+          author: 'David Lee',
+          authorRole: 'homeowner',
+          authorAvatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 4, 5),
+          category: 'energy',
+          images: [
+            'https://images.pexels.com/photos/9875441/pexels-photo-9875441.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 29,
+          comments: 11,
+          shares: 8
+        },
+        {
+          id: 6,
+          title: 'Professional Painting Techniques',
+          description: 'Learn the techniques professionals use to get perfect paint results every time. From prep work to final touches.',
+          author: 'Jennifer Garcia',
+          authorRole: 'provider',
+          authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          date: new Date(2023, 4, 8),
+          category: 'painting',
+          images: [
+            'https://images.pexels.com/photos/6444256/pexels-photo-6444256.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          ],
+          likes: 52,
+          comments: 23,
+          shares: 15
+        }
+      ];
+      
+      setProjects(mockProjects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter projects based on category and search term
+  const filteredProjects = projects.filter(project => {
+    const matchesFilter = filter === 'all' || project.category === filter;
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          project.author.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Format date
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  // Get category badge
+  const getCategoryBadge = (category) => {
+    const categories = {
+      kitchen: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Kitchen' },
+      bathroom: { bg: 'bg-green-100', text: 'text-green-800', label: 'Bathroom' },
+      outdoor: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Outdoor' },
+      living: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Living Room' },
+      energy: { bg: 'bg-red-100', text: 'text-red-800', label: 'Energy Efficiency' },
+      painting: { bg: 'bg-indigo-100', text: 'text-indigo-800', label: 'Painting' }
+    };
+    
+    const categoryInfo = categories[category] || { bg: 'bg-gray-100', text: 'text-gray-800', label: category };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryInfo.bg} ${categoryInfo.text}`}>
+        {categoryInfo.label}
+      </span>
+    );
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-full">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Community Inspiration Hub
-          </h1>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Discover amazing home improvement projects shared by our community.
-          </p>
-        </div>
-        
-        {/* Category Filter */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium ${
-              selectedCategory === 'all'
-                ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-            }`}
-          >
-            All Projects
-          </button>
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium ${
-                selectedCategory === category.id
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-        
-        {/* Projects Grid */}
-        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProjects.map(project => (
-            <div key={project.id} className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="h-48 w-full overflow-hidden">
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-              </div>
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900">
-                  <Link to={`/community/project/${project.id}`} className="hover:text-primary-600">
-                    {project.title}
-                  </Link>
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">{project.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
-                        {project.author.charAt(0)}
-                      </div>
-                    </div>
-                    <div className="ml-2">
-                      <p className="text-sm font-medium text-gray-900">{project.author}</p>
-                      <p className="text-xs text-gray-500">{new Date(project.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-3 text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-red-500 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                      </svg>
-                      {project.likes}
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-gray-400 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                      </svg>
-                      {project.comments}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-4 sm:px-6">
-                <div className="text-sm">
-                  <Link to={`/community/project/${project.id}`} className="font-medium text-primary-600 hover:text-primary-500">
-                    View project details
-                  </Link>
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Community Hub</h1>
+        <p className="mt-2 text-sm text-gray-700">
+          Share your home improvement projects, get inspired, and connect with others.
+        </p>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        {/* Filters and search */}
+        <div className="bg-white shadow rounded-lg p-6 mt-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <div>
+                <label htmlFor="filter" className="block text-sm font-medium text-gray-700">
+                  Filter by category
+                </label>
+                <select
+                  id="filter"
+                  name="filter"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  <option value="kitchen">Kitchen</option>
+                  <option value="bathroom">Bathroom</option>
+                  <option value="outdoor">Outdoor</option>
+                  <option value="living">Living Room</option>
+                  <option value="energy">Energy Efficiency</option>
+                  <option value="painting">Painting</option>
+                </select>
               </div>
             </div>
-          ))}
-        </div>
-        
-        {/* Share Your Project CTA */}
-        <div className="mt-12 bg-primary-50 rounded-lg shadow-sm overflow-hidden">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="sm:flex sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Share your own project
-                </h3>
-                <div className="mt-2 max-w-xl text-sm text-gray-500">
-                  <p>
-                    Inspire others by sharing your home improvement journey with the community.
-                  </p>
+            <div className="w-full md:w-64">
+              <label htmlFor="search" className="block text-sm font-medium text-gray-700">
+                Search
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
-              </div>
-              <div className="mt-5 sm:mt-0 sm:ml-6 sm:flex-shrink-0">
-                <button
-                  type="button"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm"
-                >
-                  {user ? 'Share a Project' : 'Sign in to Share'}
-                </button>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                  placeholder="Search projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Create post button */}
+        <div className="mt-6">
+          <button
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <PhotoIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            Share Your Project
+          </button>
+        </div>
+
+        {/* Projects grid */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {filteredProjects.length > 0 ? (
+            filteredProjects.map((project) => (
+              <div key={project.id} className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <img
+                        className="h-10 w-10 rounded-full"
+                        src={project.authorAvatar}
+                        alt={project.author}
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <div className="flex items-center">
+                        <h3 className="text-sm font-medium text-gray-900">{project.author}</h3>
+                        {project.authorRole === 'provider' && (
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Pro
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">{formatDate(project.date)}</p>
+                    </div>
+                    <div className="ml-auto">
+                      {getCategoryBadge(project.category)}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Link to={`/community/project/${project.id}`} className="text-lg font-medium text-blue-600 hover:text-blue-500">
+                      {project.title}
+                    </Link>
+                    <p className="mt-2 text-sm text-gray-500">{project.description}</p>
+                  </div>
+                  {project.images.length > 0 && (
+                    <div className="mt-4">
+                      <img
+                        src={project.images[0]}
+                        alt={project.title}
+                        className="h-64 w-full object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div className="mt-4 flex justify-between">
+                    <div className="flex space-x-4">
+                      <button
+                        type="button"
+                        className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                      >
+                        <HandThumbUpIcon className="h-5 w-5 mr-1 text-gray-400" />
+                        <span>{project.likes}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                      >
+                        <ChatBubbleLeftRightIcon className="h-5 w-5 mr-1 text-gray-400" />
+                        <span>{project.comments}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                      >
+                        <ShareIcon className="h-5 w-5 mr-1 text-gray-400" />
+                        <span>{project.shares}</span>
+                      </button>
+                    </div>
+                    <Link
+                      to={`/community/project/${project.id}`}
+                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="lg:col-span-2 bg-white overflow-hidden shadow rounded-lg p-6 text-center text-gray-500">
+              No projects found matching your criteria
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,222 +1,275 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-
-const About = () => {
-  const teamMembers = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO & Founder',
-      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bio: 'With over 15 years in home services, Sarah founded Home Swerv to bridge the gap between homeowners and quality service providers.',
-    },
-    {
-      name: 'Michael Chen',
-      role: 'CTO',
-      image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bio: 'Michael leads our technology team, bringing 10+ years of experience in building marketplace platforms and AI solutions.',
-    },
-    {
-      name: 'Aisha Patel',
-      role: 'Head of Provider Relations',
-      image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bio: 'Aisha ensures our network includes only the most qualified and reliable service providers in the industry.',
-    },
-    {
-      name: 'David Rodriguez',
-      role: 'Customer Success Director',
-      image: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bio: 'David and his team are dedicated to creating exceptional experiences for both homeowners and service providers.',
-    },
-  ];
-
+function About() {
   return (
     <div className="bg-white">
-      {/* Hero Section */}
-      <div className="bg-indigo-700 py-16 px-4 sm:px-6 lg:px-8 lg:py-24">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            About Home Swerv
-          </h1>
-          <p className="mt-4 text-xl text-indigo-100 max-w-3xl mx-auto">
-            Connecting homeowners with trusted service providers since 2023.
-          </p>
+      {/* Hero section */}
+      <div className="relative bg-gray-800 py-32">
+        <div className="absolute inset-0">
+          <img
+            className="w-full h-full object-cover"
+            src="https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+            alt="Home service professionals"
+          />
+          <div className="absolute inset-0 bg-gray-800 opacity-75" aria-hidden="true"></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">About ServiceConnect Pro</h1>
+            <p className="mt-6 text-xl text-gray-300 max-w-3xl mx-auto">
+              Connecting homeowners with trusted service providers since 2023. Our mission is to transform how home services are discovered, booked, and managed.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Mission Section */}
+      {/* Our Story section */}
       <div className="py-16 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-8">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                Our Mission
-              </h2>
-              <p className="mt-4 text-lg text-gray-500">
-                At Home Swerv, we're on a mission to transform how homeowners find, hire, and work with home service professionals. We believe everyone deserves access to reliable, skilled professionals who can help turn their house into a dream home.
+              <h2 className="text-base font-semibold text-primary-600 uppercase tracking-wide">Our Story</h2>
+              <p className="mt-2 text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
+                Building bridges between homeowners and service providers
               </p>
               <p className="mt-4 text-lg text-gray-500">
-                We're building a community where quality, transparency, and trust are at the forefront of every interaction. By connecting homeowners with verified professionals and providing tools to manage projects efficiently, we're making home improvement and maintenance simpler and more rewarding for everyone involved.
+                ServiceConnect Pro was founded with a simple idea: make it easier for homeowners to find reliable service providers, and help those providers grow their businesses.
+              </p>
+              <p className="mt-4 text-lg text-gray-500">
+                Our founders experienced firsthand the challenges of finding trustworthy professionals for home projects, while also hearing from service providers about their struggles to find new clients and manage their growing businesses.
+              </p>
+              <p className="mt-4 text-lg text-gray-500">
+                We built ServiceConnect Pro to solve these problems by creating a platform that benefits both sides of the marketplace, with powerful tools for service providers and peace of mind for homeowners.
               </p>
             </div>
-            <div className="mt-10 lg:mt-0">
-              <img
-                className="rounded-lg shadow-xl"
-                src="https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-                alt="Team meeting"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Values Section */}
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Our Values
-            </h2>
-            <p className="mt-4 text-lg text-gray-500 max-w-3xl mx-auto">
-              These core principles guide everything we do at Home Swerv.
-            </p>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Trust & Safety</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We rigorously vet all service providers and prioritize secure transactions and communications.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Quality & Excellence</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We're committed to connecting homeowners with the best professionals who deliver exceptional work.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Community</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We foster a supportive ecosystem where homeowners and service providers can thrive together.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Transparency</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We believe in clear communication, honest reviews, and upfront pricing with no hidden fees.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Innovation</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We continuously improve our platform with new technologies to make home services more accessible and efficient.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">Affordability</h3>
-              <p className="mt-2 text-base text-gray-500">
-                We strive to make quality home services accessible to everyone, regardless of budget.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Team Section */}
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Meet Our Team
-            </h2>
-            <p className="mt-4 text-lg text-gray-500 max-w-3xl mx-auto">
-              The passionate people behind Home Swerv who are dedicated to transforming the home services industry.
-            </p>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div className="mt-12 relative lg:mt-0">
+              <div className="relative mx-auto rounded-lg shadow-lg overflow-hidden lg:max-w-none">
                 <img
-                  className="w-full h-64 object-cover"
-                  src={member.image}
-                  alt={member.name}
+                  className="w-full object-cover"
+                  src="https://images.pexels.com/photos/3760529/pexels-photo-3760529.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                  alt="Team working together"
                 />
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                  <p className="text-indigo-600 font-medium">{member.role}</p>
-                  <p className="mt-3 text-base text-gray-500">{member.bio}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Our Values section */}
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-primary-600 uppercase tracking-wide">Our Values</h2>
+            <p className="mt-2 text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
+              What drives us every day
+            </p>
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+              Our core values guide everything we do, from product development to customer support.
+            </p>
+          </div>
+
+          <div className="mt-12">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="pt-6">
+                <div className="flow-root bg-white rounded-lg px-6 pb-8">
+                  <div className="-mt-6">
+                    <div>
+                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                        <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </span>
+                    </div>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Trust & Transparency</h3>
+                    <p className="mt-5 text-base text-gray-500">
+                      We believe in building trust through transparency. Our review system, verification process, and clear pricing help create honest relationships between providers and homeowners.
+                    </p>
+                  </div>
                 </div>
               </div>
-            ))}
+
+              <div className="pt-6">
+                <div className="flow-root bg-white rounded-lg px-6 pb-8">
+                  <div className="-mt-6">
+                    <div>
+                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                        <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </span>
+                    </div>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Empowerment</h3>
+                    <p className="mt-5 text-base text-gray-500">
+                      We empower service providers with tools to grow their businesses and homeowners with information to make confident decisions about their homes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <div className="flow-root bg-white rounded-lg px-6 pb-8">
+                  <div className="-mt-6">
+                    <div>
+                      <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                        <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </span>
+                    </div>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Quality & Excellence</h3>
+                    <p className="mt-5 text-base text-gray-500">
+                      We're committed to excellence in everything we do, from the providers we verify to the platform we build. We believe in raising the standard for home services.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="bg-indigo-700">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            <span className="block">Ready to get started?</span>
-            <span className="block text-indigo-200">Join our community today.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link
-                to="/auth/register"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
-              >
-                Sign up
-              </Link>
+      {/* Team section */}
+      <div className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-primary-600 uppercase tracking-wide">Our Team</h2>
+            <p className="mt-2 text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
+              Meet the people behind ServiceConnect Pro
+            </p>
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+              Our diverse team brings together expertise in technology, home services, and customer experience.
+            </p>
+          </div>
+
+          <div className="mt-12">
+            <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="text-center">
+                <div className="mx-auto h-40 w-40 rounded-full overflow-hidden">
+                  <img
+                    src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-lg font-medium text-gray-900">Alex Johnson</h3>
+                  <p className="text-primary-600">CEO & Co-Founder</p>
+                  <p className="mt-2 text-gray-500">
+                    Former contractor with 15 years of experience in home services. Passionate about improving the industry.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <div className="mx-auto h-40 w-40 rounded-full overflow-hidden">
+                  <img
+                    src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-lg font-medium text-gray-900">Samantha Chen</h3>
+                  <p className="text-primary-600">CTO & Co-Founder</p>
+                  <p className="mt-2 text-gray-500">
+                    Tech leader with experience at top Silicon Valley companies. Expert in marketplace platforms.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <div className="mx-auto h-40 w-40 rounded-full overflow-hidden">
+                  <img
+                    src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-lg font-medium text-gray-900">Michael Rodriguez</h3>
+                  <p className="text-primary-600">Head of Provider Success</p>
+                  <p className="mt-2 text-gray-500">
+                    Former small business owner who understands the challenges service providers face every day.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
-              <Link
-                to="/providers"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Browse Providers
-              </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact section */}
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-lg mx-auto md:max-w-none md:grid md:grid-cols-2 md:gap-8">
+            <div>
+              <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">Contact Us</h2>
+              <div className="mt-3">
+                <p className="text-lg text-gray-500">
+                  Have questions about ServiceConnect Pro? We're here to help.
+                </p>
+              </div>
+              <div className="mt-9">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 text-base text-gray-500">
+                    <p>(555) 123-4567</p>
+                    <p className="mt-1">Mon-Fri 8am to 6pm PST</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 text-base text-gray-500">
+                    <p>support@serviceconnectpro.com</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12 sm:mt-16 md:mt-0">
+              <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">Office Locations</h2>
+              <div className="mt-3">
+                <p className="text-lg text-gray-500">
+                  Visit us at one of our offices.
+                </p>
+              </div>
+              <div className="mt-9">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 text-base text-gray-500">
+                    <p>123 Service Street</p>
+                    <p className="mt-1">San Francisco, CA 94107</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 text-base text-gray-500">
+                    <p>456 Provider Avenue</p>
+                    <p className="mt-1">Austin, TX 78701</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default About;
+export default About
