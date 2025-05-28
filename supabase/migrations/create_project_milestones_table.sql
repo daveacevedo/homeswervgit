@@ -1,44 +1,38 @@
 /*
-  # Create project milestones table
+  # Create project_milestones table
 
   1. New Tables
     - `project_milestones`
       - `id` (uuid, primary key)
       - `project_id` (uuid, references projects)
-      - `name` (text)
+      - `title` (text, not null)
       - `description` (text)
-      - `amount` (numeric)
       - `due_date` (date)
-      - `status` (text)
-      - `payment_id` (text, nullable)
+      - `status` (text, not null)
+      - `completed_at` (timestamptz)
       - `created_at` (timestamptz)
       - `updated_at` (timestamptz)
   2. Security
     - Enable RLS on `project_milestones` table
-    - Add policies for homeowners to manage milestones for their projects
-    - Add policies for providers to view milestones for their assigned projects
-    - Add policy for admins to view all milestones
+    - Add policies for authenticated users to manage milestones for their own projects
 */
 
--- Create the project_milestones table
 CREATE TABLE IF NOT EXISTS project_milestones (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL,
-  name TEXT NOT NULL,
-  description TEXT,
-  amount NUMERIC NOT NULL DEFAULT 0,
-  due_date DATE,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'paid', 'cancelled')),
-  payment_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id uuid REFERENCES projects ON DELETE CASCADE NOT NULL,
+  title text NOT NULL,
+  description text,
+  due_date date,
+  status text NOT NULL DEFAULT 'pending',
+  completed_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 ALTER TABLE project_milestones ENABLE ROW LEVEL SECURITY;
 
--- Policy for homeowners to read milestones for their projects
-CREATE POLICY "Homeowners can read milestones for their projects"
+-- Policy for project owners to read milestones for their projects
+CREATE POLICY "Project owners can read milestones"
   ON project_milestones
   FOR SELECT
   TO authenticated
@@ -46,12 +40,12 @@ CREATE POLICY "Homeowners can read milestones for their projects"
     EXISTS (
       SELECT 1 FROM projects
       WHERE projects.id = project_milestones.project_id
-      AND projects.homeowner_id = auth.uid()
+      AND projects.owner_id = auth.uid()
     )
   );
 
--- Policy for homeowners to insert milestones for their projects
-CREATE POLICY "Homeowners can insert milestones for their projects"
+-- Policy for project owners to insert milestones for their projects
+CREATE POLICY "Project owners can insert milestones"
   ON project_milestones
   FOR INSERT
   TO authenticated
@@ -59,12 +53,12 @@ CREATE POLICY "Homeowners can insert milestones for their projects"
     EXISTS (
       SELECT 1 FROM projects
       WHERE projects.id = project_milestones.project_id
-      AND projects.homeowner_id = auth.uid()
+      AND projects.owner_id = auth.uid()
     )
   );
 
--- Policy for homeowners to update milestones for their projects
-CREATE POLICY "Homeowners can update milestones for their projects"
+-- Policy for project owners to update milestones for their projects
+CREATE POLICY "Project owners can update milestones"
   ON project_milestones
   FOR UPDATE
   TO authenticated
@@ -72,12 +66,12 @@ CREATE POLICY "Homeowners can update milestones for their projects"
     EXISTS (
       SELECT 1 FROM projects
       WHERE projects.id = project_milestones.project_id
-      AND projects.homeowner_id = auth.uid()
+      AND projects.owner_id = auth.uid()
     )
   );
 
--- Policy for homeowners to delete milestones for their projects
-CREATE POLICY "Homeowners can delete milestones for their projects"
+-- Policy for project owners to delete milestones for their projects
+CREATE POLICY "Project owners can delete milestones"
   ON project_milestones
   FOR DELETE
   TO authenticated
@@ -85,35 +79,16 @@ CREATE POLICY "Homeowners can delete milestones for their projects"
     EXISTS (
       SELECT 1 FROM projects
       WHERE projects.id = project_milestones.project_id
-      AND projects.homeowner_id = auth.uid()
+      AND projects.owner_id = auth.uid()
     )
   );
 
--- Policy for providers to read milestones for their assigned projects
-CREATE POLICY "Providers can read milestones for their assigned projects"
-  ON project_milestones
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM projects
-      WHERE projects.id = project_milestones.project_id
-      AND projects.provider_id = auth.uid()
-    )
-  );
+-- Create a trigger to update the updated_at column
+CREATE TRIGGER update_project_milestones_updated_at
+BEFORE UPDATE ON project_milestones
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
--- Policy for admins to read all milestones
-CREATE POLICY "Admins can read all milestones"
-  ON project_milestones
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.role = 'admin'
-    )
-  );
-
--- Create index for faster queries
-CREATE INDEX IF NOT EXISTS project_milestones_project_id_idx ON project_milestones(project_id);
+-- Create indexes for faster queries
+CREATE INDEX IF NOT EXISTS project_milestones_project_id_idx ON project_milestones (project_id);
+CREATE INDEX IF NOT EXISTS project_milestones_status_idx ON project_milestones (status);
