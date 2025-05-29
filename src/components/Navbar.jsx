@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [featuresOpen, setFeaturesOpen] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   
@@ -29,6 +30,37 @@ function Navbar() {
               <Link to="/about" className="border-transparent text-gray-500 hover:border-primary-500 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 About
               </Link>
+              {/* Features dropdown */}
+              <div className="relative">
+                <button 
+                  className="border-transparent text-gray-500 hover:border-primary-500 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  onClick={() => setFeaturesOpen(!featuresOpen)}
+                  onBlur={() => setTimeout(() => setFeaturesOpen(false), 100)}
+                >
+                  Features
+                  <svg className={`ml-1 h-4 w-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {featuresOpen && (
+                  <div className="absolute z-10 left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="py-1">
+                      <Link to="/features/homeowners" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        For Homeowners
+                      </Link>
+                      <Link to="/features/providers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        For Service Providers
+                      </Link>
+                      <Link to="/features/pricing" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Pricing
+                      </Link>
+                      <Link to="/features/testimonials" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Testimonials
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
               <a href="#services" className="border-transparent text-gray-500 hover:border-primary-500 hover:text-primary-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Services
               </a>
@@ -91,6 +123,34 @@ function Navbar() {
             <Link to="/about" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
               About
             </Link>
+            {/* Mobile Features dropdown */}
+            <div>
+              <button 
+                onClick={() => setFeaturesOpen(!featuresOpen)}
+                className="flex justify-between w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700"
+              >
+                <span>Features</span>
+                <svg className={`h-5 w-5 transition-transform ${featuresOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {featuresOpen && (
+                <div className="pl-5 pr-4 py-2 space-y-1">
+                  <Link to="/features/homeowners" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
+                    For Homeowners
+                  </Link>
+                  <Link to="/features/providers" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
+                    For Service Providers
+                  </Link>
+                  <Link to="/features/pricing" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
+                    Pricing
+                  </Link>
+                  <Link to="/features/testimonials" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
+                    Testimonials
+                  </Link>
+                </div>
+              )}
+            </div>
             <a href="#services" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-primary-500 hover:text-primary-700">
               Services
             </a>

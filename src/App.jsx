@@ -9,6 +9,12 @@ import Pricing from './pages/public/Pricing';
 import Contact from './pages/public/Contact';
 import NotFound from './pages/public/NotFound';
 
+// Feature pages
+import ForHomeowners from './pages/features/ForHomeowners';
+import ForProviders from './pages/features/ForProviders';
+import FeaturePricing from './pages/features/Pricing';
+import Testimonials from './pages/features/Testimonials';
+
 // Auth pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -41,6 +47,12 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<Contact />} />
+        
+        {/* Feature pages */}
+        <Route path="/features/homeowners" element={<ForHomeowners />} />
+        <Route path="/features/providers" element={<ForProviders />} />
+        <Route path="/features/pricing" element={<FeaturePricing />} />
+        <Route path="/features/testimonials" element={<Testimonials />} />
         
         {/* Auth routes */}
         <Route path="/login" element={<Login />} />
