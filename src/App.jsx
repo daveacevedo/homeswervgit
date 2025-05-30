@@ -1,90 +1,140 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import PrivateRoute from './components/PrivateRoute';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { HomeownerProvider } from './contexts/HomeownerContext';
+import { ProviderProvider } from './contexts/ProviderContext';
 
-// Public pages
+// Layouts
+import PublicLayout from './layouts/PublicLayout';
+import AuthLayout from './layouts/AuthLayout';
+import HomeownerLayout from './layouts/HomeownerLayout';
+import ProviderLayout from './layouts/ProviderLayout';
+
+// Public Pages
 import Home from './pages/public/Home';
 import About from './pages/public/About';
-import Pricing from './pages/public/Pricing';
 import Contact from './pages/public/Contact';
-import NotFound from './pages/public/NotFound';
+import Features from './pages/public/Features';
+import Pricing from './pages/public/Pricing';
+import Testimonials from './pages/public/Testimonials';
+import HomeownerFeatures from './pages/public/HomeownerFeatures';
+import ProviderFeatures from './pages/public/ProviderFeatures';
+import SiteMap from './pages/public/SiteMap';
 
-// Feature pages
-import ForHomeowners from './pages/features/ForHomeowners';
-import ForProviders from './pages/features/ForProviders';
-import FeaturePricing from './pages/features/Pricing';
-import Testimonials from './pages/features/Testimonials';
-
-// Auth pages
+// Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
-import UserTypeSelection from './components/dashboard/UserTypeSelection';
+import UserTypeSelection from './pages/auth/UserTypeSelection';
+import HomeownerProfileSetup from './pages/auth/HomeownerProfileSetup';
+import ProviderProfileSetup from './pages/auth/ProviderProfileSetup';
 
-// Homeowner pages
+// Homeowner Pages
 import HomeownerDashboard from './pages/homeowner/Dashboard';
-import HomeownerProjects from './pages/homeowner/Projects';
-import HomeownerServices from './pages/homeowner/Services';
-import HomeownerRewards from './pages/homeowner/Rewards';
 import HomeownerProfile from './pages/homeowner/Profile';
+import HomeownerProjects from './pages/homeowner/Projects';
+import HomeownerMessages from './pages/homeowner/Messages';
 import HomeownerSettings from './pages/homeowner/Settings';
 
-// Provider pages
+// Provider Pages
 import ProviderDashboard from './pages/provider/Dashboard';
-import ProviderJobs from './pages/provider/Jobs';
-import ProviderClients from './pages/provider/Clients';
-import ProviderCalendar from './pages/provider/Calendar';
 import ProviderProfile from './pages/provider/Profile';
+import ProviderJobs from './pages/provider/Jobs';
+import ProviderMessages from './pages/provider/Messages';
 import ProviderSettings from './pages/provider/Settings';
+
+// Protected Route Component
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/contact" element={<Contact />} />
-        
-        {/* Feature pages */}
-        <Route path="/features/homeowners" element={<ForHomeowners />} />
-        <Route path="/features/providers" element={<ForProviders />} />
-        <Route path="/features/pricing" element={<FeaturePricing />} />
-        <Route path="/features/testimonials" element={<Testimonials />} />
-        
-        {/* Auth routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Protected routes */}
-        <Route element={<PrivateRoute />}>
-          {/* User type selection */}
-          <Route path="/user-type-selection" element={<UserTypeSelection />} />
-          
-          {/* Homeowner routes */}
-          <Route path="/homeowner/dashboard" element={<HomeownerDashboard />} />
-          <Route path="/homeowner/projects" element={<HomeownerProjects />} />
-          <Route path="/homeowner/services" element={<HomeownerServices />} />
-          <Route path="/homeowner/rewards" element={<HomeownerRewards />} />
-          <Route path="/homeowner/profile" element={<HomeownerProfile />} />
-          <Route path="/homeowner/settings" element={<HomeownerSettings />} />
-          
-          {/* Provider routes */}
-          <Route path="/provider/dashboard" element={<ProviderDashboard />} />
-          <Route path="/provider/jobs" element={<ProviderJobs />} />
-          <Route path="/provider/clients" element={<ProviderClients />} />
-          <Route path="/provider/calendar" element={<ProviderCalendar />} />
-          <Route path="/provider/profile" element={<ProviderProfile />} />
-          <Route path="/provider/settings" element={<ProviderSettings />} />
-        </Route>
-        
-        {/* 404 route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AuthProvider>
+        <HomeownerProvider>
+          <ProviderProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/features/homeowners" element={<HomeownerFeatures />} />
+                <Route path="/features/providers" element={<ProviderFeatures />} />
+                <Route path="/features/testimonials" element={<Testimonials />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/site-map" element={<SiteMap />} />
+              </Route>
+
+              {/* Auth Routes */}
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route 
+                  path="/user-type-selection" 
+                  element={
+                    <ProtectedRoute>
+                      <UserTypeSelection />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/homeowner-profile-setup" 
+                  element={
+                    <ProtectedRoute>
+                      <HomeownerProfileSetup />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/provider-profile-setup" 
+                  element={
+                    <ProtectedRoute>
+                      <ProviderProfileSetup />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Route>
+
+              {/* Homeowner Routes */}
+              <Route 
+                element={
+                  <ProtectedRoute>
+                    <HomeownerLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/homeowner/dashboard" element={<HomeownerDashboard />} />
+                <Route path="/homeowner/profile" element={<HomeownerProfile />} />
+                <Route path="/homeowner/projects" element={<HomeownerProjects />} />
+                <Route path="/homeowner/messages" element={<HomeownerMessages />} />
+                <Route path="/homeowner/settings" element={<HomeownerSettings />} />
+              </Route>
+
+              {/* Provider Routes */}
+              <Route 
+                element={
+                  <ProtectedRoute>
+                    <ProviderLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+                <Route path="/provider/profile" element={<ProviderProfile />} />
+                <Route path="/provider/jobs" element={<ProviderJobs />} />
+                <Route path="/provider/messages" element={<ProviderMessages />} />
+                <Route path="/provider/settings" element={<ProviderSettings />} />
+              </Route>
+
+              {/* Catch-all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ProviderProvider>
+        </HomeownerProvider>
+      </AuthProvider>
     </Router>
   );
 }

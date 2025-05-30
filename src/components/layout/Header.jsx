@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon, BellIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, BellIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Fragment } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import ProfileToggle from './ProfileToggle';
+
+// This component is not being used directly - keeping for reference only
+// DO NOT IMPORT THIS COMPONENT IN OTHER FILES
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -14,6 +17,8 @@ function classNames(...classes) {
 const Header = () => {
   const { user, signOut } = useAuth();
   const { activeRole, userProfile } = useApp();
+  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const featuresRef = useRef(null);
   
   // Navigation items based on authentication and role
   const navigation = [
@@ -21,6 +26,14 @@ const Header = () => {
     { name: 'About', href: '/about', current: false },
     { name: 'Pricing', href: '/pricing', current: false },
     { name: 'Contact', href: '/contact', current: false },
+  ];
+  
+  // Features dropdown items
+  const featuresItems = [
+    { name: 'For Homeowners', href: '/features/homeowners', description: 'Features for homeowners' },
+    { name: 'For Service Providers', href: '/features/providers', description: 'Features for service providers' },
+    { name: 'Pricing', href: '/features/pricing', description: 'Pricing plans and options' },
+    { name: 'Testimonials', href: '/features/testimonials', description: 'Customer success stories' },
   ];
   
   // Add authenticated navigation items based on role
@@ -41,6 +54,20 @@ const Header = () => {
       );
     }
   }
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (featuresRef.current && !featuresRef.current.contains(event.target)) {
+        setFeaturesOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [featuresRef]);
   
   const handleSignOut = async () => {
     try {
@@ -91,6 +118,57 @@ const Header = () => {
                         {item.name}
                       </Link>
                     ))}
+                    
+                    {/* Features dropdown - visible in desktop view */}
+                    <div className="relative" ref={featuresRef}>
+                      <button
+                        onClick={() => setFeaturesOpen(!featuresOpen)}
+                        className={classNames(
+                          featuresOpen ? 'bg-gray-50 text-gray-900' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900',
+                          'px-3 py-2 rounded-md text-sm font-medium inline-flex items-center'
+                        )}
+                        aria-expanded={featuresOpen}
+                      >
+                        Features
+                        <ChevronDownIcon 
+                          className={classNames(
+                            "ml-1 h-4 w-4 transition-transform duration-200",
+                            featuresOpen ? "transform rotate-180" : ""
+                          )} 
+                          aria-hidden="true" 
+                        />
+                      </button>
+                      
+                      {/* Features dropdown menu */}
+                      {featuresOpen && (
+                        <div className="absolute z-50 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <div className="py-1">
+                            {featuresItems.map((item) => (
+                              <Link
+                                key={item.name}
+                                to={item.href}
+                                className="group flex items-start px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setFeaturesOpen(false)}
+                              >
+                                <div>
+                                  <p className="font-medium text-gray-900">{item.name}</p>
+                                  <p className="mt-1 text-xs text-gray-500">{item.description}</p>
+                                </div>
+                              </Link>
+                            ))}
+                            <div className="px-4 py-3 border-t border-gray-100">
+                              <Link
+                                to="/sitemap"
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                onClick={() => setFeaturesOpen(false)}
+                              >
+                                View Full Site Map →
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -226,6 +304,47 @@ const Header = () => {
                   {item.name}
                 </Disclosure.Button>
               ))}
+              
+              {/* Features dropdown for mobile */}
+              <div>
+                <button
+                  onClick={() => setFeaturesOpen(!featuresOpen)}
+                  className="text-gray-500 hover:bg-gray-50 hover:text-gray-900 w-full text-left px-3 py-2 rounded-md text-base font-medium flex justify-between items-center"
+                >
+                  Features
+                  <ChevronDownIcon 
+                    className={classNames(
+                      "h-5 w-5 transition-transform duration-200",
+                      featuresOpen ? "transform rotate-180" : ""
+                    )} 
+                  />
+                </button>
+                
+                {featuresOpen && (
+                  <div className="pl-4 space-y-1 mt-1 bg-gray-50 rounded-md py-2">
+                    {featuresItems.map((item) => (
+                      <div key={item.name} className="py-1">
+                        <Disclosure.Button
+                          as={Link}
+                          to={item.href}
+                          className="text-gray-700 hover:bg-gray-100 block px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          {item.name}
+                          <p className="text-xs text-gray-500 font-normal mt-1">{item.description}</p>
+                        </Disclosure.Button>
+                      </div>
+                    ))}
+                    <div className="px-3 py-2">
+                      <Link
+                        to="/sitemap"
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        View Full Site Map →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {!user && (
                 <div className="pt-4 pb-3 border-t border-gray-200">

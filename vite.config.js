@@ -19,7 +19,7 @@ export default defineConfig({
   },
   // Reduce build optimization to avoid potential deadlocks
   build: {
-    sourcemap: true,
+    sourcemap: false, // Disable source maps to prevent file system errors
     minify: 'esbuild',
     rollupOptions: {
       output: {

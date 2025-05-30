@@ -29,6 +29,10 @@ export function HomeownerProvider({ children }) {
             last_name: profileData.last_name,
             email: profileData.email,
             phone: profileData.phone || null,
+            address: profileData.address || null,
+            city: profileData.city || null,
+            state: profileData.state || null,
+            zip_code: profileData.zip_code || null,
           }
         ])
         .select()

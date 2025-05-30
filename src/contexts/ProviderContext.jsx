@@ -29,6 +29,15 @@ export function ProviderProvider({ children }) {
             contact_name: profileData.contact_name,
             email: profileData.email,
             phone: profileData.phone || null,
+            address: profileData.address || null,
+            city: profileData.city || null,
+            state: profileData.state || null,
+            zip_code: profileData.zip_code || null,
+            service_categories: profileData.service_categories || [],
+            business_description: profileData.business_description || null,
+            years_in_business: profileData.years_in_business || null,
+            license_number: profileData.license_number || null,
+            insurance_info: profileData.insurance_info || null,
           }
         ])
         .select()

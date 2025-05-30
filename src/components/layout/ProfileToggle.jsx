@@ -1,57 +1,41 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Switch } from '@headlessui/react';
 import { useApp } from '../../contexts/AppContext';
 
-function ProfileToggle() {
-  const { activeRole, hasMultipleRoles, switchRole, loading } = useApp();
-  const navigate = useNavigate();
-  
-  if (!hasMultipleRoles) {
+const ProfileToggle = () => {
+  const { activeRole, setActiveRole, userRoles } = useApp();
+
+  // If user only has one role, don't show the toggle
+  if (!userRoles || userRoles.length <= 1) {
     return null;
   }
-  
-  const isProvider = activeRole === 'provider';
-  
-  const handleToggle = async () => {
-    const newRole = isProvider ? 'homeowner' : 'provider';
-    await switchRole(newRole);
-    
-    // Navigate to the appropriate dashboard
-    if (newRole === 'provider') {
-      navigate('/provider/dashboard');
-    } else {
-      navigate('/homeowner/dashboard');
-    }
+
+  const handleRoleChange = (e) => {
+    setActiveRole(e.target.value);
   };
-  
+
   return (
-    <div className="flex items-center space-x-3">
-      <span className={`text-sm ${!isProvider ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
-        Homeowner
-      </span>
-      
-      <Switch
-        checked={isProvider}
-        onChange={handleToggle}
-        disabled={loading}
-        className={`${
-          isProvider ? 'bg-blue-600' : 'bg-gray-200'
-        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-      >
-        <span className="sr-only">Toggle user role</span>
-        <span
-          className={`${
-            isProvider ? 'translate-x-6' : 'translate-x-1'
-          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-        />
-      </Switch>
-      
-      <span className={`text-sm ${isProvider ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
-        Provider
-      </span>
+    <div className="flex items-center">
+      <label htmlFor="role-select" className="sr-only">
+        Select role
+      </label>
+      <div className="relative">
+        <select
+          id="role-select"
+          name="role"
+          className="block w-full pl-3 pr-10 py-2 text-sm text-gray-700 border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+          value={activeRole}
+          onChange={handleRoleChange}
+        >
+          {userRoles.includes('homeowner') && (
+            <option value="homeowner">Homeowner</option>
+          )}
+          {userRoles.includes('provider') && (
+            <option value="provider">Service Provider</option>
+          )}
+        </select>
+      </div>
     </div>
   );
-}
+};
 
 export default ProfileToggle;

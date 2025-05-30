@@ -27,7 +27,7 @@ const MainLayout = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const role = userProfile?.role || 'homeowner';
-  const unreadNotifications = notifications.filter(n => !n.read).length;
+  const unreadNotifications = notifications?.filter(n => !n.read)?.length || 0;
 
   const handleSignOut = async () => {
     try {
@@ -51,7 +51,7 @@ const MainLayout = () => {
     : [
         { name: 'Dashboard', href: '/homeowner/dashboard', icon: HomeIcon },
         { name: 'Projects', href: '/homeowner/projects', icon: BriefcaseIcon },
-        { name: 'Providers', href: '/homeowner/providers', icon: UserGroupIcon },
+        { name: 'Providers', href: '/homeowner/services', icon: UserGroupIcon },
         { name: 'Messages', href: '/homeowner/messages', icon: ChatBubbleLeftRightIcon },
         { name: 'Rewards', href: '/homeowner/rewards', icon: StarIcon },
         { name: 'Profile', href: '/homeowner/profile', icon: UserIcon },
@@ -184,7 +184,7 @@ const MainLayout = () => {
                       <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
-                      {notifications.length > 0 ? (
+                      {notifications && notifications.length > 0 ? (
                         notifications.map((notification) => (
                           <div
                             key={notification.id}
@@ -200,7 +200,7 @@ const MainLayout = () => {
                         <div className="px-4 py-2 text-sm text-gray-500">No notifications</div>
                       )}
                     </div>
-                    {notifications.length > 0 && (
+                    {notifications && notifications.length > 0 && (
                       <div className="px-4 py-2 border-t border-gray-200">
                         <button
                           type="button"

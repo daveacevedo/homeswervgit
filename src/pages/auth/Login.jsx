@@ -14,8 +14,8 @@ const schema = yup.object().shape({
 
 const Login = () => {
   const { signIn } = useAuth();
-  const { getHomeownerProfile } = useHomeowner();
-  const { getProviderProfile } = useProvider();
+  const homeownerContext = useHomeowner();
+  const providerContext = useProvider();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,14 +34,13 @@ const Login = () => {
       
       // Check which profiles the user has
       const [homeownerProfile, providerProfile] = await Promise.all([
-        getHomeownerProfile(),
-        getProviderProfile()
+        homeownerContext?.getHomeownerProfile?.() || null,
+        providerContext?.getProviderProfile?.() || null
       ]);
       
       // Determine where to redirect based on profiles
       if (homeownerProfile && providerProfile) {
-        // User has both profiles, check if they have a default preference
-        // For now, default to homeowner dashboard
+        // User has both profiles, redirect to selection page
         navigate('/user-type-selection');
       } else if (providerProfile) {
         // User is only a provider

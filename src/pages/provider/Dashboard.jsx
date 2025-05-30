@@ -1,447 +1,326 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { useApp } from '../../contexts/AppContext';
 import { 
   CalendarIcon, 
   CurrencyDollarIcon, 
   UserGroupIcon, 
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  ChartBarIcon
+  ClipboardDocumentCheckIcon,
+  ChartBarIcon,
+  BriefcaseIcon
 } from '@heroicons/react/24/outline';
-import { format } from 'date-fns';
-import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const ProviderDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [stats, setStats] = useState({
-    totalJobs: 0,
-    pendingJobs: 0,
-    completedJobs: 0,
-    totalEarnings: 0
-  });
-  const [upcomingJobs, setUpcomingJobs] = useState([]);
-  const [recentReviews, setRecentReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { userProfile, loading } = useApp();
+  
+  // Sample data for demonstration
+  const upcomingJobs = [
+    { id: 1, client: 'Michael Johnson', service: 'Bathroom Renovation', date: '2023-06-15', time: '10:00 AM', address: '123 Main St, Anytown' },
+    { id: 2, client: 'Sarah Williams', service: 'Electrical Wiring', date: '2023-06-18', time: '2:30 PM', address: '456 Oak Ave, Somewhere' },
+  ];
+  
+  const recentClients = [
+    { id: 1, name: 'Robert Davis', project: 'Kitchen Remodel', status: 'In Progress', image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150' },
+    { id: 2, name: 'Jennifer Smith', project: 'Backyard Landscaping', status: 'Completed', image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150' },
+    { id: 3, name: 'David Wilson', project: 'Roof Repair', status: 'Scheduled', image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150' },
+  ];
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
-        fetchProviderData(session.user.id);
-      }
-    };
-
-    getUser();
-  }, []);
-
-  const fetchProviderData = async (userId) => {
-    try {
-      setLoading(true);
-      
-      // Fetch provider profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (profileError) throw profileError;
-      setProfile(profileData);
-      
-      // For demo purposes, we'll use mock data
-      // In a real app, you would fetch this from your database
-      
-      // Mock stats
-      setStats({
-        totalJobs: 24,
-        pendingJobs: 5,
-        completedJobs: 19,
-        totalEarnings: 4850
-      });
-      
-      // Mock upcoming jobs
-      setUpcomingJobs([
-        {
-          id: 1,
-          title: 'Kitchen Renovation',
-          client: 'John Smith',
-          date: new Date(2023, 4, 15, 10, 0),
-          address: '123 Main St, Anytown, CA',
-          status: 'scheduled'
-        },
-        {
-          id: 2,
-          title: 'Bathroom Plumbing',
-          client: 'Sarah Johnson',
-          date: new Date(2023, 4, 16, 14, 30),
-          address: '456 Oak Ave, Somewhere, CA',
-          status: 'confirmed'
-        },
-        {
-          id: 3,
-          title: 'Deck Installation',
-          client: 'Michael Brown',
-          date: new Date(2023, 4, 18, 9, 0),
-          address: '789 Pine Rd, Nowhere, CA',
-          status: 'pending'
-        }
-      ]);
-      
-      // Mock recent reviews
-      setRecentReviews([
-        {
-          id: 1,
-          client: 'Emily Wilson',
-          rating: 5,
-          comment: 'Excellent work! Very professional and completed the job ahead of schedule.',
-          date: new Date(2023, 4, 10)
-        },
-        {
-          id: 2,
-          client: 'David Lee',
-          rating: 4,
-          comment: 'Good quality work and reasonable pricing. Would hire again.',
-          date: new Date(2023, 4, 5)
-        }
-      ]);
-      
-    } catch (error) {
-      console.error('Error fetching provider data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Chart data
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Jobs Completed',
-        data: [3, 5, 2, 4, 3, 2],
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      },
-      {
-        label: 'Revenue ($)',
-        data: [750, 1200, 500, 900, 800, 700],
-        backgroundColor: 'rgba(16, 185, 129, 0.5)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 1,
-        yAxisID: 'y1'
-      }
-    ]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Jobs'
-        }
-      },
-      y1: {
-        beginAtZero: true,
-        position: 'right',
-        grid: {
-          drawOnChartArea: false
-        },
-        title: {
-          display: true,
-          text: 'Revenue ($)'
-        }
-      }
-    },
-    plugins: {
-      legend: {
-        position: 'top'
-      },
-      title: {
-        display: true,
-        text: 'Monthly Performance'
-      }
-    }
-  };
-
-  // Helper function to render stars for ratings
-  const renderStars = (rating) => {
-    return Array(5).fill(0).map((_, i) => (
-      <svg 
-        key={i} 
-        className={`h-5 w-5 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`} 
-        fill="currentColor" 
-        viewBox="0 0 20 20"
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ));
+  const monthlyStats = {
+    completedJobs: 12,
+    newClients: 5,
+    revenue: 8750,
+    satisfaction: 4.8
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Welcome back, {userProfile?.full_name || 'Provider'}!
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Here's an overview of your business
+        </p>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        {/* Welcome section */}
-        <div className="bg-white shadow rounded-lg p-6 mt-6">
-          <h2 className="text-lg font-medium text-gray-900">
-            Welcome back, {profile?.first_name || 'Provider'}!
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Here's what's happening with your business today.
-          </p>
-        </div>
 
-        {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CalendarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Jobs</dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900">{stats.totalJobs}</div>
-                    </dd>
-                  </dl>
-                </div>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ClipboardDocumentCheckIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
               </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <Link to="/provider/jobs" className="font-medium text-blue-600 hover:text-blue-500">
-                  View all
-                </Link>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Completed Jobs</dt>
+                  <dd>
+                    <div className="text-lg font-medium text-gray-900">{monthlyStats.completedJobs}</div>
+                  </dd>
+                </dl>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ClockIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Pending Jobs</dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900">{stats.pendingJobs}</div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <Link to="/provider/jobs?status=pending" className="font-medium text-blue-600 hover:text-blue-500">
-                  View pending
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Completed Jobs</dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900">{stats.completedJobs}</div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <Link to="/provider/jobs?status=completed" className="font-medium text-blue-600 hover:text-blue-500">
-                  View completed
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CurrencyDollarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Earnings</dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900">${stats.totalEarnings}</div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <Link to="/provider/jobs" className="font-medium text-blue-600 hover:text-blue-500">
-                  View details
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart and upcoming jobs */}
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {/* Chart */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900">Performance Overview</h3>
-            <div className="mt-4 h-72">
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-          </div>
-
-          {/* Upcoming jobs */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900">Upcoming Jobs</h3>
-              <div className="mt-4 flow-root">
-                <ul className="-my-5 divide-y divide-gray-200">
-                  {upcomingJobs.length > 0 ? (
-                    upcomingJobs.map((job) => (
-                      <li key={job.id} className="py-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                              <CalendarIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{job.title}</p>
-                            <p className="text-sm text-gray-500 truncate">Client: {job.client}</p>
-                            <p className="text-sm text-gray-500 truncate">
-                              {format(job.date, 'MMM d, yyyy h:mm a')}
-                            </p>
-                            <p className="text-sm text-gray-500 truncate">{job.address}</p>
-                          </div>
-                          <div>
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                job.status === 'scheduled'
-                                  ? 'bg-green-100 text-green-800'
-                                  : job.status === 'confirmed'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}
-                            >
-                              {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                            </span>
-                          </div>
-                        </div>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="py-4 text-center text-gray-500">No upcoming jobs</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <Link to="/provider/calendar" className="font-medium text-blue-600 hover:text-blue-500">
-                  View calendar
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent reviews */}
-        <div className="mt-8 bg-white shadow rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900">Recent Reviews</h3>
-            <div className="mt-4 flow-root">
-              <ul className="-my-5 divide-y divide-gray-200">
-                {recentReviews.length > 0 ? (
-                  recentReviews.map((review) => (
-                    <li key={review.id} className="py-5">
-                      <div className="flex items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="text-sm font-medium text-gray-900">{review.client}</h4>
-                            <span className="ml-2 text-sm text-gray-500">
-                              {format(review.date, 'MMM d, yyyy')}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex items-center">
-                            <div className="flex items-center">
-                              {renderStars(review.rating)}
-                            </div>
-                            <span className="ml-2 text-sm text-gray-500">
-                              {review.rating} out of 5 stars
-                            </span>
-                          </div>
-                          <div className="mt-2 text-sm text-gray-700">
-                            <p>{review.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  ))
-                ) : (
-                  <li className="py-5 text-center text-gray-500">No reviews yet</li>
-                )}
-              </ul>
             </div>
           </div>
           <div className="bg-gray-50 px-5 py-3">
             <div className="text-sm">
-              <Link to="/provider/profile" className="font-medium text-blue-600 hover:text-blue-500">
-                View all reviews
+              <Link to="/provider/jobs" className="font-medium text-blue-600 hover:text-blue-500">
+                View all jobs
               </Link>
             </div>
           </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <UserGroupIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">New Clients</dt>
+                  <dd>
+                    <div className="text-lg font-medium text-gray-900">{monthlyStats.newClients}</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-5 py-3">
+            <div className="text-sm">
+              <Link to="/provider/clients" className="font-medium text-blue-600 hover:text-blue-500">
+                View all clients
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CurrencyDollarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Monthly Revenue</dt>
+                  <dd>
+                    <div className="text-lg font-medium text-gray-900">${monthlyStats.revenue}</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-5 py-3">
+            <div className="text-sm">
+              <Link to="/provider/finances" className="font-medium text-blue-600 hover:text-blue-500">
+                View finances
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ChartBarIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Client Satisfaction</dt>
+                  <dd>
+                    <div className="text-lg font-medium text-gray-900">{monthlyStats.satisfaction}/5</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-5 py-3">
+            <div className="text-sm">
+              <Link to="/provider/reviews" className="font-medium text-blue-600 hover:text-blue-500">
+                View reviews
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Upcoming Jobs */}
+      <div className="mb-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Today's Schedule</h2>
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {upcomingJobs.map((job) => (
+              <li key={job.id}>
+                <div className="px-4 py-4 sm:px-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <p className="text-sm font-medium text-blue-600 truncate">{job.service}</p>
+                      <div className="ml-2 flex-shrink-0 flex">
+                        <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {job.time}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="ml-2 flex-shrink-0 flex">
+                      <Link
+                        to={`/provider/jobs/${job.id}`}
+                        className="font-medium text-blue-600 hover:text-blue-500"
+                      >
+                        View details
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:flex sm:justify-between">
+                    <div className="sm:flex">
+                      <p className="flex items-center text-sm text-gray-500">
+                        <UserGroupIcon className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true" />
+                        {job.client}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                      <CalendarIcon className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true" />
+                      <p>
+                        {job.address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
+            <Link
+              to="/provider/calendar"
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              View Full Calendar
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Clients */}
+      <div className="mb-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Clients</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {recentClients.map((client) => (
+            <div key={client.id} className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-12 w-12">
+                    <img className="h-12 w-12 rounded-full" src={client.image} alt={client.name} />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">{client.name}</h3>
+                    <p className="text-sm text-gray-500">{client.project}</p>
+                    <div className="mt-1">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        client.status === 'Completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : client.status === 'In Progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {client.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <Link to={`/provider/clients/${client.id}`} className="font-medium text-blue-600 hover:text-blue-500">
+                    View details
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 text-right">
+          <Link
+            to="/provider/clients"
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            View All Clients
+          </Link>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            to="/provider/jobs/new"
+            className="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50"
+          >
+            <div className="p-5">
+              <div className="flex items-center justify-center">
+                <BriefcaseIcon className="h-8 w-8 text-blue-500" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900">Add New Job</h3>
+                <p className="mt-1 text-sm text-gray-500">Create a new job or quote</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link
+            to="/provider/calendar/new"
+            className="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50"
+          >
+            <div className="p-5">
+              <div className="flex items-center justify-center">
+                <CalendarIcon className="h-8 w-8 text-blue-500" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900">Schedule Appointment</h3>
+                <p className="mt-1 text-sm text-gray-500">Add to your calendar</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link
+            to="/provider/clients/new"
+            className="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50"
+          >
+            <div className="p-5">
+              <div className="flex items-center justify-center">
+                <UserGroupIcon className="h-8 w-8 text-blue-500" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900">Add New Client</h3>
+                <p className="mt-1 text-sm text-gray-500">Create client profile</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link
+            to="/provider/invoices/new"
+            className="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50"
+          >
+            <div className="p-5">
+              <div className="flex items-center justify-center">
+                <CurrencyDollarIcon className="h-8 w-8 text-blue-500" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900">Create Invoice</h3>
+                <p className="mt-1 text-sm text-gray-500">Bill your clients</p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
