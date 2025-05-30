@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import VisionBoard from '../../components/visionboard/VisionBoard';
 
 const Home = () => {
   // Sample testimonials data
@@ -96,6 +97,9 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* Vision Board Section */}
+      <VisionBoard />
 
       {/* How It Works Section */}
       <div className="py-16 bg-gray-50">
