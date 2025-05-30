@@ -1,108 +1,90 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { ApiKeyService } from '../lib/integrations';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { supabase } from '../utils/supabaseClient';
 
 const AdminContext = createContext();
 
+export function useAdmin() {
+  return useContext(AdminContext);
+}
+
 export function AdminProvider({ children }) {
-  const [adminUser, setAdminUser] = useState(null);
+  const { user } = useAuth();
   const [adminRole, setAdminRole] = useState(null);
+  const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch admin role and permissions when user changes
   useEffect(() => {
-    async function loadAdminData() {
+    if (!user) {
+      setAdminRole(null);
+      setPermissions([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchAdminRole = async () => {
       try {
         setLoading(true);
-        setError(null);
         
-        // Get the current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-        
-        // Check if the user is an admin
+        // Check if user has an admin role
         const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
-          .select(`
-            *,
-            role:role_id (
-              id,
-              name,
-              permissions
-            )
-          `)
+          .select('role')
           .eq('user_id', user.id)
           .single();
-        
-        if (adminError && adminError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+
+        if (adminError && adminError.code !== 'PGRST116') {
           throw adminError;
         }
-        
-        if (adminData) {
-          setAdminUser(adminData);
-          setAdminRole(adminData.role);
+
+        if (!adminData) {
+          setAdminRole(null);
+          setPermissions([]);
+          return;
         }
+
+        setAdminRole(adminData.role);
+        
+        // Fetch permissions for this role
+        const { data: permissionsData, error: permissionsError } = await supabase
+          .from('admin_role_permissions')
+          .select('permission_category, permission_name')
+          .eq('role', adminData.role);
+          
+        if (permissionsError) throw permissionsError;
+        
+        setPermissions(permissionsData || []);
       } catch (error) {
-        console.error('Error loading admin data:', error);
-        setError('Failed to load admin data. Please try again.');
+        console.error('Error fetching admin data:', error.message);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
-    }
-    
-    loadAdminData();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      loadAdminData();
-    });
-    
-    return () => {
-      authListener?.subscription.unsubscribe();
     };
-  }, []);
 
-  // Check if the admin has a specific permission
-  const hasPermission = (category, permission) => {
-    if (!adminRole || !adminRole.permissions) return false;
-    
-    const categoryPermissions = adminRole.permissions[category];
-    if (!categoryPermissions) return false;
-    
-    return categoryPermissions[permission] === true;
-  };
+    fetchAdminRole();
+  }, [user]);
 
-  // Create a new API key
-  const createApiKey = async (keyData) => {
-    if (!hasPermission('api_management', 'manage_keys')) {
-      throw new Error('You do not have permission to create API keys');
-    }
+  // Check if user has a specific permission
+  const hasPermission = (category, name) => {
+    if (!adminRole) return false;
     
-    return ApiKeyService.createApiKey(keyData);
-  };
-
-  // Revoke an API key
-  const revokeApiKey = async (id) => {
-    if (!hasPermission('api_management', 'manage_keys')) {
-      throw new Error('You do not have permission to revoke API keys');
-    }
+    // Super admin has all permissions
+    if (adminRole === 'super_admin') return true;
     
-    return ApiKeyService.revokeApiKey(id);
+    return permissions.some(
+      p => p.permission_category === category && p.permission_name === name
+    );
   };
 
   const value = {
-    adminUser,
     adminRole,
+    permissions,
     loading,
     error,
-    isAdmin: !!adminUser,
     hasPermission,
-    createApiKey,
-    revokeApiKey
   };
 
   return (
@@ -110,12 +92,4 @@ export function AdminProvider({ children }) {
       {children}
     </AdminContext.Provider>
   );
-}
-
-export function useAdmin() {
-  const context = useContext(AdminContext);
-  if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
-  }
-  return context;
 }

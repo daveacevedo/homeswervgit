@@ -1,401 +1,243 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabaseClient';
 
 const HomeownerProfileSetup = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { user, updateUserProfile } = useAuth();
   
-  // Form state
   const [formData, setFormData] = useState({
-    full_name: '',
-    phone_number: '',
+    firstName: '',
+    lastName: '',
     address: '',
     city: '',
     state: '',
-    zip_code: '',
-    property_type: 'single_family',
-    property_age: '',
-    property_size: '',
-    renovation_interests: [],
-    maintenance_interests: []
+    zipCode: '',
+    phone: ''
   });
-
-  // Check if user already has a completed homeowner profile
-  useEffect(() => {
-    const checkProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('homeowner_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (error) throw error;
-        
-        // If profile exists and is complete, redirect to dashboard
-        if (data && data.is_profile_complete) {
-          navigate('/homeowner/dashboard');
-        } 
-        // If profile exists but is incomplete, load the data
-        else if (data) {
-          setFormData(prevData => ({
-            ...prevData,
-            full_name: data.full_name || '',
-            phone_number: data.phone_number || '',
-            address: data.address || '',
-            city: data.city || '',
-            state: data.state || '',
-            zip_code: data.zip_code || '',
-            property_type: data.property_type || 'single_family',
-            property_age: data.property_age || '',
-            property_size: data.property_size || '',
-            renovation_interests: data.renovation_interests || [],
-            maintenance_interests: data.maintenance_interests || []
-          }));
-        }
-      } catch (error) {
-        console.error('Error checking profile:', error);
-      }
-    };
-    
-    checkProfile();
-  }, [user, navigate]);
-
-  const handleInputChange = (e) => {
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({
       ...prevData,
       [name]: value
     }));
   };
-
-  const handleCheckboxChange = (e) => {
-    const { name, value, checked } = e.target;
-    
-    setFormData(prevData => {
-      const currentArray = [...(prevData[name] || [])];
-      
-      if (checked) {
-        // Add value to array if not already present
-        if (!currentArray.includes(value)) {
-          return {
-            ...prevData,
-            [name]: [...currentArray, value]
-          };
-        }
-      } else {
-        // Remove value from array
-        return {
-          ...prevData,
-          [name]: currentArray.filter(item => item !== value)
-        };
-      }
-      
-      return prevData;
-    });
-  };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!user) return;
-    
-    setSaving(true);
-    setError('');
-    setSuccess('');
+    // Basic validation
+    if (!formData.firstName || !formData.lastName || !formData.zipCode) {
+      setError('Please fill in all required fields');
+      return;
+    }
     
     try {
-      // Update homeowner profile
-      const { error } = await supabase
-        .from('homeowner_profiles')
-        .update({
-          ...formData,
-          is_profile_complete: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-        
-      if (error) throw error;
+      setError('');
+      setLoading(true);
       
-      setSuccess('Profile updated successfully!');
+      // Update user profile with homeowner details
+      await updateUserProfile({
+        ...formData,
+        profileComplete: true
+      });
       
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        navigate('/homeowner/dashboard');
-      }, 1500);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setError(error.message || 'Failed to update profile. Please try again.');
+      // Navigate to homeowner dashboard
+      navigate('/homeowner/dashboard');
+    } catch (err) {
+      setError('Failed to update profile: ' + (err.message || ''));
+      console.error(err);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Complete Your Homeowner Profile</h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Help us personalize your experience and connect you with the right service providers
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <img
+          className="mx-auto h-12 w-auto"
+          src="https://tailwindui.com/img/logos/workflow-mark-blue-600.svg"
+          alt="Home Swerv"
+        />
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Complete your homeowner profile
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Tell us a bit about yourself so we can help you find the right service providers
         </p>
       </div>
 
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  First name <span className="text-red-500">*</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="firstName"
+                    id="firstName"
+                    autoComplete="given-name"
+                    required
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
 
-      {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-          <span className="block sm:inline">{success}</span>
-        </div>
-      )}
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  Last name <span className="text-red-500">*</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="lastName"
+                    id="lastName"
+                    autoComplete="family-name"
+                    required
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+            </div>
 
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Personal Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                Street address
+              </label>
+              <div className="mt-1">
+                <input
+                  type="text"
+                  name="address"
+                  id="address"
+                  autoComplete="street-address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
             </div>
-            
-            <div>
-              <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="tel"
-                id="phone_number"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
 
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Property Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                  City
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="city"
+                    id="city"
+                    autoComplete="address-level2"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                  State
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="state"
+                    id="state"
+                    autoComplete="address-level1"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">
+                  ZIP / Postal code <span className="text-red-500">*</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="zipCode"
+                    id="zipCode"
+                    autoComplete="postal-code"
+                    required
+                    value={formData.zipCode}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
             </div>
-            
+
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                Phone number
+              </label>
+              <div className="mt-1">
+                <input
+                  type="tel"
+                  name="phone"
+                  id="phone"
+                  autoComplete="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+
             <div>
-              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <input
-                type="text"
-                id="state"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="zip_code" className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
-              <input
-                type="text"
-                id="zip_code"
-                name="zip_code"
-                value={formData.zip_code}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-              <select
-                id="property_type"
-                name="property_type"
-                value={formData.property_type}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <option value="single_family">Single Family Home</option>
-                <option value="multi_family">Multi-Family Home</option>
-                <option value="townhouse">Townhouse</option>
-                <option value="condo">Condominium</option>
-                <option value="apartment">Apartment</option>
-                <option value="mobile_home">Mobile Home</option>
-                <option value="other">Other</option>
-              </select>
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  'Complete Profile'
+                )}
+              </button>
             </div>
-            
-            <div>
-              <label htmlFor="property_age" className="block text-sm font-medium text-gray-700 mb-1">Property Age (years)</label>
-              <input
-                type="number"
-                id="property_age"
-                name="property_age"
-                value={formData.property_age}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                min="0"
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="property_size" className="block text-sm font-medium text-gray-700 mb-1">Property Size (sq ft)</label>
-              <input
-                type="number"
-                id="property_size"
-                name="property_size"
-                value={formData.property_size}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                min="0"
-                required
-              />
-            </div>
-          </div>
+          </form>
         </div>
-
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Your Interests</h2>
-          
-          <div className="mb-6">
-            <p className="block text-sm font-medium text-gray-700 mb-2">Renovation Interests (select all that apply)</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {[
-                { value: 'kitchen', label: 'Kitchen Remodeling' },
-                { value: 'bathroom', label: 'Bathroom Remodeling' },
-                { value: 'basement', label: 'Basement Finishing' },
-                { value: 'addition', label: 'Home Addition' },
-                { value: 'outdoor', label: 'Outdoor/Landscaping' },
-                { value: 'roofing', label: 'Roofing' },
-                { value: 'flooring', label: 'Flooring' },
-                { value: 'painting', label: 'Painting' },
-                { value: 'windows', label: 'Windows & Doors' }
-              ].map(item => (
-                <div key={item.value} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`renovation_${item.value}`}
-                    name="renovation_interests"
-                    value={item.value}
-                    checked={formData.renovation_interests.includes(item.value)}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor={`renovation_${item.value}`} className="ml-2 text-sm text-gray-700">
-                    {item.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <p className="block text-sm font-medium text-gray-700 mb-2">Maintenance Interests (select all that apply)</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {[
-                { value: 'plumbing', label: 'Plumbing' },
-                { value: 'electrical', label: 'Electrical' },
-                { value: 'hvac', label: 'HVAC' },
-                { value: 'appliance', label: 'Appliance Repair' },
-                { value: 'cleaning', label: 'Cleaning Services' },
-                { value: 'lawn', label: 'Lawn & Garden' },
-                { value: 'pest', label: 'Pest Control' },
-                { value: 'security', label: 'Home Security' },
-                { value: 'smart_home', label: 'Smart Home' }
-              ].map(item => (
-                <div key={item.value} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`maintenance_${item.value}`}
-                    name="maintenance_interests"
-                    value={item.value}
-                    checked={formData.maintenance_interests.includes(item.value)}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor={`maintenance_${item.value}`} className="ml-2 text-sm text-gray-700">
-                    {item.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            ) : 'Complete Profile & Continue'}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };

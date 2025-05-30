@@ -1,107 +1,222 @@
-import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { 
+  HomeIcon, 
+  UserIcon, 
+  ClipboardDocumentListIcon, 
+  ChatBubbleLeftRightIcon, 
+  Cog6ToothIcon,
+  BriefcaseIcon,
+  UsersIcon,
+  CalendarIcon,
+  WrenchScrewdriverIcon,
+  StarIcon
+} from '@heroicons/react/24/outline';
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
 
 function Sidebar({ showSidebar, setShowSidebar, userType }) {
-  const location = useLocation()
-  const { user } = useAuth()
+  const location = useLocation();
   
-  const providerNavigation = [
-    { name: 'Dashboard', href: '/provider/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { name: 'Leads', href: '/provider/leads', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
-    { name: 'Calendar', href: '/provider/calendar', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { name: 'Services', href: '/provider/services', icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
-    { name: 'Portfolio', href: '/provider/portfolio', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { name: 'Analytics', href: '/provider/analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-    { name: 'Profile', href: '/provider/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-  ]
-  
-  const homeownerNavigation = [
-    { name: 'Dashboard', href: '/homeowner/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { name: 'Properties', href: '/homeowner/properties', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { name: 'Vision Boards', href: '/homeowner/vision-boards', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { name: 'Project Plans', href: '/homeowner/project-plans', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
-    { name: 'Find Providers', href: '/homeowner/find-providers', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-    { name: 'Estimates', href: '/homeowner/estimate-requests', icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
-    { name: 'Bookings', href: '/homeowner/bookings', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { name: 'Messages', href: '/homeowner/messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
-    { name: 'Inspiration', href: '/homeowner/inspiration', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
-    { name: 'Profile', href: '/homeowner/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-  ]
-  
-  const navigation = userType === 'provider' ? providerNavigation : homeownerNavigation
+  // Define navigation items based on user type
+  const navigation = userType === 'homeowner' 
+    ? [
+        { name: 'Dashboard', href: '/homeowner/dashboard', icon: HomeIcon },
+        { name: 'Profile', href: '/homeowner/profile', icon: UserIcon },
+        { name: 'Projects', href: '/homeowner/projects', icon: ClipboardDocumentListIcon },
+        { name: 'Find Services', href: '/homeowner/services', icon: WrenchScrewdriverIcon },
+        { name: 'Messages', href: '/homeowner/messages', icon: ChatBubbleLeftRightIcon },
+        { name: 'Rewards', href: '/homeowner/rewards', icon: StarIcon },
+        { name: 'Settings', href: '/homeowner/settings', icon: Cog6ToothIcon },
+      ]
+    : [
+        { name: 'Dashboard', href: '/provider/dashboard', icon: HomeIcon },
+        { name: 'Profile', href: '/provider/profile', icon: UserIcon },
+        { name: 'Jobs', href: '/provider/jobs', icon: BriefcaseIcon },
+        { name: 'Clients', href: '/provider/clients', icon: UsersIcon },
+        { name: 'Calendar', href: '/provider/calendar', icon: CalendarIcon },
+        { name: 'Messages', href: '/provider/messages', icon: ChatBubbleLeftRightIcon },
+        { name: 'Settings', href: '/provider/settings', icon: Cog6ToothIcon },
+      ];
   
   return (
     <>
-      {/* Mobile sidebar overlay */}
-      {showSidebar && (
-        <div className="md:hidden fixed inset-0 z-40 bg-gray-600 bg-opacity-75" onClick={() => setShowSidebar(false)}></div>
-      )}
-      
-      {/* Sidebar */}
-      <div className={`md:flex md:flex-shrink-0 ${showSidebar ? 'fixed inset-0 flex z-40 md:static md:inset-auto md:translate-x-0' : 'hidden'}`}>
-        <div className="md:w-64 flex flex-col">
-          {/* Sidebar component */}
-          <div className="flex flex-col h-0 flex-1 bg-white border-r border-gray-200">
-            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-              <div className="flex items-center flex-shrink-0 px-4">
-                <span className="text-2xl font-bold text-primary-600">ServiceConnect Pro</span>
+      {/* Mobile sidebar */}
+      <div
+        className={classNames(
+          showSidebar ? 'fixed inset-0 z-40 md:hidden' : 'hidden',
+          'transition-opacity ease-linear duration-300'
+        )}
+      >
+        {/* Overlay */}
+        <div
+          className={classNames(
+            showSidebar ? 'opacity-100 ease-in duration-300' : 'opacity-0 ease-out duration-300',
+            'fixed inset-0 bg-gray-600 bg-opacity-75'
+          )}
+          onClick={() => setShowSidebar(false)}
+        ></div>
+        
+        {/* Sidebar panel */}
+        <div className={classNames(
+          showSidebar ? 'translate-x-0 ease-out duration-300' : '-translate-x-full ease-in duration-300',
+          'relative flex-1 flex flex-col max-w-xs w-full bg-white transition transform'
+        )}>
+          <div className="absolute top-0 right-0 -mr-12 pt-2">
+            <button
+              type="button"
+              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              onClick={() => setShowSidebar(false)}
+            >
+              <span className="sr-only">Close sidebar</span>
+              <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+            </button>
+          </div>
+          
+          <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+            <div className="flex-shrink-0 flex items-center px-4">
+              <Link to="/" className="text-2xl font-bold text-blue-600">
+                Home Swerv
+              </Link>
+            </div>
+            <nav className="mt-5 px-2 space-y-1">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={classNames(
+                    location.pathname === item.href
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                    'group flex items-center px-2 py-2 text-base font-medium rounded-md'
+                  )}
+                >
+                  <item.icon
+                    className={classNames(
+                      location.pathname === item.href
+                        ? 'text-blue-600'
+                        : 'text-gray-400 group-hover:text-gray-500',
+                      'mr-4 flex-shrink-0 h-6 w-6'
+                    )}
+                    aria-hidden="true"
+                  />
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <Link to="/" className="flex-shrink-0 group block">
+              <div className="flex items-center">
+                <div>
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium">
+                    {userType === 'homeowner' ? 'H' : 'P'}
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-base font-medium text-gray-700 group-hover:text-gray-900">
+                    {userType === 'homeowner' ? 'Homeowner View' : 'Provider View'}
+                  </p>
+                  <p className="text-sm font-medium text-gray-500 group-hover:text-gray-700">
+                    View main site
+                  </p>
+                </div>
               </div>
-              <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`)
-                  
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`${
-                        isActive
-                          ? 'bg-primary-50 text-primary-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
-                    >
-                      <svg
-                        className={`${
-                          isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
-                        } mr-3 flex-shrink-0 h-6 w-6`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                      </svg>
-                      {item.name}
-                    </Link>
-                  )
-                })}
+            </Link>
+          </div>
+        </div>
+        
+        <div className="flex-shrink-0 w-14" aria-hidden="true">
+          {/* Force sidebar to shrink to fit close icon */}
+        </div>
+      </div>
+      
+      {/* Desktop sidebar */}
+      <div className={classNames(
+        'hidden md:flex md:flex-shrink-0',
+        showSidebar ? 'md:w-64' : 'md:w-20'
+      )}>
+        <div className={classNames(
+          'flex flex-col w-full',
+          showSidebar ? 'md:w-64' : 'md:w-20'
+        )}>
+          <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
+            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+              <div className={classNames(
+                "flex items-center flex-shrink-0 px-4",
+                !showSidebar && "justify-center"
+              )}>
+                {showSidebar ? (
+                  <Link to="/" className="text-2xl font-bold text-blue-600">
+                    Home Swerv
+                  </Link>
+                ) : (
+                  <Link to="/" className="text-2xl font-bold text-blue-600">
+                    HS
+                  </Link>
+                )}
+              </div>
+              <nav className="mt-5 flex-1 px-2 space-y-1">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={classNames(
+                      location.pathname === item.href
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
+                      !showSidebar && 'justify-center'
+                    )}
+                  >
+                    <item.icon
+                      className={classNames(
+                        location.pathname === item.href
+                          ? 'text-blue-600'
+                          : 'text-gray-400 group-hover:text-gray-500',
+                        'flex-shrink-0 h-6 w-6',
+                        showSidebar && 'mr-3'
+                      )}
+                      aria-hidden="true"
+                    />
+                    {showSidebar && <span>{item.name}</span>}
+                    {!showSidebar && (
+                      <span className="sr-only">{item.name}</span>
+                    )}
+                  </Link>
+                ))}
               </nav>
             </div>
             <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-              <div className="flex-shrink-0 w-full group block">
-                <div className="flex items-center">
-                  <div>
-                    <svg className="inline-block h-9 w-9 rounded-full text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className={classNames(
+                  "flex items-center text-sm font-medium text-gray-500 hover:text-gray-700",
+                  !showSidebar && "justify-center w-full"
+                )}
+              >
+                {showSidebar ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                      {user?.email}
-                    </p>
-                    <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                      {userType === 'provider' ? 'Service Provider' : 'Homeowner'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                    <span>Collapse</span>
+                  </>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default Sidebar
+export default Sidebar;

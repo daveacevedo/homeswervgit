@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="256px" height="256px" viewBox="0 0 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect fill="#2563EB" x="0" y="0" width="256" height="256" rx="28"></rect>
-        <path d="M76.5,76.5 L179.5,76.5 C183.642,76.5 187,79.858 187,84 L187,172 C187,176.142 183.642,179.5 179.5,179.5 L76.5,179.5 C72.358,179.5 69,176.142 69,172 L69,84 C69,79.858 72.358,76.5 76.5,76.5 Z" stroke="#FFFFFF" stroke-width="12"></path>
-        <path d="M128,76.5 L128,179.5" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"></path>
-        <path d="M69,128 L187,128" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"></path>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+  <polyline points="9 22 9 12 15 12 15 22"></polyline>
 </svg>

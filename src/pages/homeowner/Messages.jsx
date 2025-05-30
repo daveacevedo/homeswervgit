@@ -1,594 +1,685 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { format } from 'date-fns';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useHomeowner } from '../../contexts/HomeownerContext';
 import { 
-  PaperAirplaneIcon, 
+  ChatBubbleLeftRightIcon, 
+  PaperAirplaneIcon,
   PaperClipIcon,
-  EllipsisHorizontalIcon,
-  MagnifyingGlassIcon
+  FaceSmileIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  VideoCameraIcon,
+  InformationCircleIcon,
+  EllipsisHorizontalIcon
 } from '@heroicons/react/24/outline';
 
-const HomeownerMessages = () => {
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+const Messages = () => {
+  const { user } = useAuth();
+  const { homeownerProfile } = useHomeowner();
+  const [searchParams] = useSearchParams();
+  const initialProviderId = searchParams.get('provider');
+  
+  const [providers, setProviders] = useState([]);
+  const [conversations, setConversations] = useState({});
+  const [selectedProviderId, setSelectedProviderId] = useState(null);
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
+  
+  const messagesEndRef = useRef(null);
+  
   useEffect(() => {
-    fetchConversations();
-  }, []);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation.id);
-    }
-  }, [selectedConversation]);
-
-  const fetchConversations = async () => {
-    try {
-      setLoading(true);
-      
-      // In a real app, you would fetch conversations from your database
-      // For demo purposes, we'll use mock data
-      
-      // Mock conversations data
-      const mockConversations = [
-        {
-          id: 1,
-          provider: {
-            id: 101,
-            name: 'Michael Brown',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            company: 'Elite Home Renovations'
+    // Simulate fetching data
+    const fetchData = async () => {
+      try {
+        // In a real app, these would be API calls
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock data
+        const mockProviders = [
+          {
+            id: 'prov-1',
+            name: 'Ace Plumbing & Remodeling',
+            category: 'Plumbing',
+            avatar: 'https://images.pexels.com/photos/8961251/pexels-photo-8961251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            online: true,
+            lastSeen: null,
+            unreadCount: 2
           },
-          lastMessage: {
-            text: 'I can come by on Friday at 2 PM to look at your kitchen.',
-            timestamp: new Date(2023, 4, 10, 14, 30),
-            isRead: true,
-            sender: 'provider'
+          {
+            id: 'prov-2',
+            name: 'Green Thumb Landscaping',
+            category: 'Landscaping',
+            avatar: 'https://images.pexels.com/photos/4503273/pexels-photo-4503273.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            online: false,
+            lastSeen: '2023-11-02T14:30:00',
+            unreadCount: 0
           },
-          project: 'Kitchen Renovation',
-          unreadCount: 0
-        },
-        {
-          id: 2,
-          provider: {
-            id: 102,
-            name: 'Jennifer Garcia',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            company: 'Perfect Painting Services'
+          {
+            id: 'prov-3',
+            name: 'Bright Spark Electric',
+            category: 'Electrical',
+            avatar: 'https://images.pexels.com/photos/8961292/pexels-photo-8961292.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            online: true,
+            lastSeen: null,
+            unreadCount: 0
           },
-          lastMessage: {
-            text: 'I have availability next week for your painting project.',
-            timestamp: new Date(2023, 4, 9, 10, 15),
-            isRead: false,
-            sender: 'provider'
-          },
-          project: 'Interior Painting',
-          unreadCount: 2
-        },
-        {
-          id: 3,
-          provider: {
-            id: 103,
-            name: 'Robert Martinez',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            company: 'Martinez Electrical'
-          },
-          lastMessage: {
-            text: 'The electrical work in your home office is complete. All outlets are now working properly.',
-            timestamp: new Date(2023, 4, 8, 16, 45),
-            isRead: true,
-            sender: 'provider'
-          },
-          project: 'Electrical Work',
-          unreadCount: 0
-        },
-        {
-          id: 4,
-          provider: {
-            id: 104,
-            name: 'Lisa Anderson',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            company: 'Green Thumb Landscaping'
-          },
-          lastMessage: {
-            text: 'I\'ve prepared a design proposal for your front yard landscaping project.',
-            timestamp: new Date(2023, 4, 7, 11, 30),
-            isRead: true,
-            sender: 'provider'
-          },
-          project: 'Landscaping',
-          unreadCount: 0
+          {
+            id: 'prov-4',
+            name: 'Top Notch Roofing',
+            category: 'Roofing',
+            avatar: 'https://images.pexels.com/photos/6474343/pexels-photo-6474343.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+            online: false,
+            lastSeen: '2023-11-01T09:15:00',
+            unreadCount: 0
+          }
+        ];
+        
+        const mockConversations = {
+          'prov-1': [
+            {
+              id: 'msg-1',
+              sender: 'provider',
+              text: 'Hi there! I wanted to follow up on the bathroom renovation project. We\'re on track to start the tile installation next week.',
+              timestamp: '2023-11-02T10:30:00',
+              read: true
+            },
+            {
+              id: 'msg-2',
+              sender: 'homeowner',
+              text: 'That sounds great! Do you need me to select the grout color before you start?',
+              timestamp: '2023-11-02T10:35:00',
+              read: true
+            },
+            {
+              id: 'msg-3',
+              sender: 'provider',
+              text: 'Yes, that would be helpful. I can bring some samples tomorrow if you\'re available.',
+              timestamp: '2023-11-02T10:40:00',
+              read: true
+            },
+            {
+              id: 'msg-4',
+              sender: 'homeowner',
+              text: 'Perfect. I\'ll be home after 3pm tomorrow.',
+              timestamp: '2023-11-02T10:45:00',
+              read: true
+            },
+            {
+              id: 'msg-5',
+              sender: 'provider',
+              text: 'Great! I\'ll stop by around 4pm with the samples.',
+              timestamp: '2023-11-02T10:50:00',
+              read: false
+            },
+            {
+              id: 'msg-6',
+              sender: 'provider',
+              text: 'Also, I wanted to let you know that the new vanity you selected is now in stock. Would you like me to go ahead and order it?',
+              timestamp: '2023-11-02T14:15:00',
+              read: false
+            }
+          ],
+          'prov-2': [
+            {
+              id: 'msg-7',
+              sender: 'homeowner',
+              text: 'Hello! I\'m wondering when you\'ll be coming for the first lawn service?',
+              timestamp: '2023-10-28T09:30:00',
+              read: true
+            },
+            {
+              id: 'msg-8',
+              sender: 'provider',
+              text: 'Hi there! We have you scheduled for November 10th, between 9am and 12pm. Does that still work for you?',
+              timestamp: '2023-10-28T11:45:00',
+              read: true
+            },
+            {
+              id: 'msg-9',
+              sender: 'homeowner',
+              text: 'Yes, that works perfectly. Do I need to do anything to prepare?',
+              timestamp: '2023-10-28T13:20:00',
+              read: true
+            },
+            {
+              id: 'msg-10',
+              sender: 'provider',
+              text: 'Just make sure any pets are kept inside during the service, and if there are any specific areas you want us to focus on, please mark them or let us know when we arrive.',
+              timestamp: '2023-10-28T14:05:00',
+              read: true
+            },
+            {
+              id: 'msg-11',
+              sender: 'homeowner',
+              text: 'Will do. Thanks!',
+              timestamp: '2023-10-28T14:10:00',
+              read: true
+            }
+          ],
+          'prov-3': [
+            {
+              id: 'msg-12',
+              sender: 'provider',
+              text: 'The electrical panel upgrade has been completed successfully. All circuits are labeled and the permit has been finalized.',
+              timestamp: '2023-10-28T16:30:00',
+              read: true
+            },
+            {
+              id: 'msg-13',
+              sender: 'homeowner',
+              text: 'Thank you for the quick and professional work! Everything seems to be working great.',
+              timestamp: '2023-10-28T18:45:00',
+              read: true
+            },
+            {
+              id: 'msg-14',
+              sender: 'provider',
+              text: 'You\'re welcome! Don\'t hesitate to reach out if you have any questions or concerns. We provide a 1-year warranty on all our work.',
+              timestamp: '2023-10-29T09:15:00',
+              read: true
+            }
+          ],
+          'prov-4': []
+        };
+        
+        setProviders(mockProviders);
+        setConversations(mockConversations);
+        
+        // If provider ID was passed in URL, select that provider
+        if (initialProviderId) {
+          setSelectedProviderId(initialProviderId);
+        } else if (mockProviders.length > 0) {
+          // Otherwise select the first provider with unread messages, or just the first provider
+          const providerWithUnread = mockProviders.find(p => p.unreadCount > 0);
+          setSelectedProviderId(providerWithUnread ? providerWithUnread.id : mockProviders[0].id);
         }
-      ];
-      
-      setConversations(mockConversations);
-      
-      // Select the first conversation by default
-      if (mockConversations.length > 0 && !selectedConversation) {
-        setSelectedConversation(mockConversations[0]);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching messages data:', error);
+        setLoading(false);
       }
-      
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-    } finally {
-      setLoading(false);
+    };
+    
+    fetchData();
+  }, [initialProviderId]);
+  
+  useEffect(() => {
+    // Scroll to bottom of messages when conversation changes or new message is added
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  const fetchMessages = async (conversationId) => {
-    try {
-      // In a real app, you would fetch messages from your database
-      // For demo purposes, we'll use mock data
-      
-      // Mock messages data
-      const mockMessages = {
-        1: [
-          {
-            id: 1,
-            text: 'Hi, I\'m interested in renovating my kitchen. Do you offer free consultations?',
-            timestamp: new Date(2023, 4, 9, 9, 30),
-            sender: 'homeowner'
-          },
-          {
-            id: 2,
-            text: 'Yes, we do offer free consultations. I\'d be happy to come take a look at your kitchen and discuss your renovation ideas.',
-            timestamp: new Date(2023, 4, 9, 10, 15),
-            sender: 'provider'
-          },
-          {
-            id: 3,
-            text: 'Great! When would you be available?',
-            timestamp: new Date(2023, 4, 9, 10, 45),
-            sender: 'homeowner'
-          },
-          {
-            id: 4,
-            text: 'I have availability this Thursday or Friday afternoon. Would either of those work for you?',
-            timestamp: new Date(2023, 4, 9, 11, 30),
-            sender: 'provider'
-          },
-          {
-            id: 5,
-            text: 'Friday afternoon would work well. How about 2 PM?',
-            timestamp: new Date(2023, 4, 9, 14, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 6,
-            text: '2 PM on Friday works for me. I\'ll put it on my calendar. Could you please provide your address?',
-            timestamp: new Date(2023, 4, 9, 14, 45),
-            sender: 'provider'
-          },
-          {
-            id: 7,
-            text: '123 Main St, Anytown, CA. Thanks!',
-            timestamp: new Date(2023, 4, 9, 15, 30),
-            sender: 'homeowner'
-          },
-          {
-            id: 8,
-            text: 'I can come by on Friday at 2 PM to look at your kitchen.',
-            timestamp: new Date(2023, 4, 10, 14, 30),
-            sender: 'provider'
-          }
-        ],
-        2: [
-          {
-            id: 1,
-            text: 'Hello, I\'m looking to get my living room, dining room, and hallway painted. Do you have availability in the next few weeks?',
-            timestamp: new Date(2023, 4, 7, 10, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 2,
-            text: 'Hi! Yes, I have some availability coming up. What colors are you thinking of using?',
-            timestamp: new Date(2023, 4, 7, 11, 30),
-            sender: 'provider'
-          },
-          {
-            id: 3,
-            text: 'I\'m thinking of a light gray for the living room and hallway, and a sage green for the dining room.',
-            timestamp: new Date(2023, 4, 7, 13, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 4,
-            text: 'Those colors sound nice. I can provide a quote if you let me know the approximate square footage or dimensions of the rooms.',
-            timestamp: new Date(2023, 4, 7, 14, 30),
-            sender: 'provider'
-          },
-          {
-            id: 5,
-            text: 'The living room is about 15x20, dining room is 12x14, and the hallway is about 30 feet long and 4 feet wide.',
-            timestamp: new Date(2023, 4, 7, 15, 45),
-            sender: 'homeowner'
-          },
-          {
-            id: 6,
-            text: 'Thanks for the information. Based on those dimensions, I estimate it would take about 3-4 days to complete the job. I have availability starting the week after next.',
-            timestamp: new Date(2023, 4, 8, 9, 0),
-            sender: 'provider'
-          },
-          {
-            id: 7,
-            text: 'I was hoping to get it done sooner. Do you have any availability next week?',
-            timestamp: new Date(2023, 4, 8, 16, 20),
-            sender: 'homeowner'
-          },
-          {
-            id: 8,
-            text: 'I have availability next week for your painting project.',
-            timestamp: new Date(2023, 4, 9, 10, 15),
-            sender: 'provider'
-          }
-        ],
-        3: [
-          {
-            id: 1,
-            text: 'Hi, I need to add some outlets in my home office. Can you help with that?',
-            timestamp: new Date(2023, 4, 5, 9, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 2,
-            text: 'Hello! Yes, I can help with adding outlets to your home office. How many outlets do you need and where would you like them placed?',
-            timestamp: new Date(2023, 4, 5, 10, 30),
-            sender: 'provider'
-          },
-          {
-            id: 3,
-            text: 'I need 3 new outlets - one on each wall of the office. I\'m currently only using extension cords which isn\'t ideal.',
-            timestamp: new Date(2023, 4, 5, 11, 15),
-            sender: 'homeowner'
-          },
-          {
-            id: 4,
-            text: 'I understand. Using extension cords long-term can be a fire hazard. I can install the new outlets for you. When would be a good time for me to come take a look?',
-            timestamp: new Date(2023, 4, 5, 13, 0),
-            sender: 'provider'
-          },
-          {
-            id: 5,
-            text: 'Would tomorrow afternoon work? I\'m free after 2 PM.',
-            timestamp: new Date(2023, 4, 5, 14, 30),
-            sender: 'homeowner'
-          },
-          {
-            id: 6,
-            text: 'Tomorrow at 3 PM works for me. I\'ll see you then!',
-            timestamp: new Date(2023, 4, 5, 15, 0),
-            sender: 'provider'
-          },
-          {
-            id: 7,
-            text: 'Great, see you at 3 PM. My address is 456 Oak Ave, Somewhere, CA.',
-            timestamp: new Date(2023, 4, 5, 15, 30),
-            sender: 'homeowner'
-          },
-          {
-            id: 8,
-            text: 'The electrical work in your home office is complete. All outlets are now working properly.',
-            timestamp: new Date(2023, 4, 8, 16, 45),
-            sender: 'provider'
-          }
-        ],
-        4: [
-          {
-            id: 1,
-            text: 'Hello, I\'m interested in redesigning my front yard with new landscaping. Do you offer design services?',
-            timestamp: new Date(2023, 4, 5, 13, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 2,
-            text: 'Hi! Yes, we offer comprehensive landscape design services. We can create a custom design based on your preferences, budget, and the specific conditions of your yard.',
-            timestamp: new Date(2023, 4, 5, 14, 30),
-            sender: 'provider'
-          },
-          {
-            id: 3,
-            text: 'That sounds great. I\'m looking for a low-maintenance design with native plants and perhaps a small seating area.',
-            timestamp: new Date(2023, 4, 5, 15, 0),
-            sender: 'homeowner'
-          },
-          {
-            id: 4,
-            text: 'Native plants and a seating area would make a beautiful, sustainable front yard. I\'d be happy to create a design proposal for you. Could we schedule a time for me to visit your property and take measurements?',
-            timestamp: new Date(2023, 4, 6, 9, 0),
-            sender: 'provider'
-          },
-          {
-            id: 5,
-            text: 'Yes, that would be helpful. How about this Saturday morning?',
-            timestamp: new Date(2023, 4, 6, 10, 30),
-            sender: 'homeowner'
-          },
-          {
-            id: 6,
-            text: 'Saturday morning works for me. How about 10 AM?',
-            timestamp: new Date(2023, 4, 6, 11, 15),
-            sender: 'provider'
-          },
-          {
-            id: 7,
-            text: '10 AM on Saturday is perfect. My address is 505 Spruce Ct, Somewhere, CA.',
-            timestamp: new Date(2023, 4, 6, 13, 45),
-            sender: 'homeowner'
-          },
-          {
-            id: 8,
-            text: 'I\'ve prepared a design proposal for your front yard landscaping project.',
-            timestamp: new Date(2023, 4, 7, 11, 30),
-            sender: 'provider'
-          }
-        ]
-      };
-      
-      setMessages(mockMessages[conversationId] || []);
-      
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
+  }, [selectedProviderId, conversations]);
+  
   const handleSendMessage = (e) => {
     e.preventDefault();
     
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!message.trim() || !selectedProviderId) return;
     
-    // In a real app, you would save the message to your database
-    // For demo purposes, we'll just add it to the local state
-    
-    const newMessageObj = {
-      id: messages.length + 1,
-      text: newMessage,
-      timestamp: new Date(),
-      sender: 'homeowner'
+    // Add new message to conversation
+    const newMessage = {
+      id: `msg-${Date.now()}`,
+      sender: 'homeowner',
+      text: message,
+      timestamp: new Date().toISOString(),
+      read: true
     };
     
-    setMessages([...messages, newMessageObj]);
+    setConversations(prev => ({
+      ...prev,
+      [selectedProviderId]: [...(prev[selectedProviderId] || []), newMessage]
+    }));
     
-    // Update the conversation with the new last message
-    setConversations(conversations.map(conv => 
-      conv.id === selectedConversation.id
-        ? {
-            ...conv,
-            lastMessage: {
-              text: newMessage,
-              timestamp: new Date(),
-              isRead: true,
-              sender: 'homeowner'
-            }
-          }
-        : conv
-    ));
-    
-    setNewMessage('');
-  };
-
-  // Format timestamp
-  const formatMessageTime = (timestamp) => {
-    return format(timestamp, 'h:mm a');
+    // Clear message input
+    setMessage('');
   };
   
-  const formatConversationTime = (timestamp) => {
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
     const now = new Date();
-    const messageDate = new Date(timestamp);
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     
-    // If the message is from today, show the time
-    if (messageDate.toDateString() === now.toDateString()) {
-      return format(messageDate, 'h:mm a');
+    if (diffDays === 0) {
+      // Today - show time only
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      // Yesterday
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      // Within a week - show day name
+      return date.toLocaleDateString([], { weekday: 'long' });
+    } else {
+      // Older - show date
+      return date.toLocaleDateString();
     }
-    
-    // If the message is from this week, show the day
-    const diffDays = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
-    if (diffDays < 7) {
-      return format(messageDate, 'EEEE');
-    }
-    
-    // Otherwise, show the date
-    return format(messageDate, 'MMM d');
   };
-
-  // Filter conversations based on search term
-  const filteredConversations = conversations.filter(conv => 
-    conv.provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.provider.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.project.toLowerCase().includes(searchTerm.toLowerCase())
+  
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return '';
+    
+    const date = new Date(lastSeen);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return `Last seen ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+    } else {
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) {
+        return `Last seen ${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+      } else {
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays === 1) {
+          return 'Last seen yesterday';
+        } else {
+          return `Last seen ${diffDays} days ago`;
+        }
+      }
+    }
+  };
+  
+  const filteredProviders = providers.filter(provider => 
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    provider.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (loading && conversations.length === 0) {
+  
+  const selectedProvider = providers.find(p => p.id === selectedProviderId);
+  const currentConversation = selectedProviderId ? conversations[selectedProviderId] || [] : [];
+  
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
       </div>
     );
   }
-
+  
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Messages</h1>
+    <div>
+      <div className="md:flex md:items-center md:justify-between mb-8">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+            Messages
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Communicate with your service providers
+          </p>
+        </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="flex h-[calc(100vh-200px)]">
-            {/* Conversation list */}
-            <div className="w-1/3 border-r border-gray-200">
-              <div className="p-4 border-b border-gray-200">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </div>
-                  <input
-                    type="text"
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Search conversations"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+      
+      {/* Messages Interface */}
+      <div className="bg-white shadow sm:rounded-lg overflow-hidden">
+        <div className="flex h-[calc(80vh-8rem)]">
+          {/* Providers List */}
+          <div className="w-full sm:w-80 border-r border-gray-200 flex flex-col">
+            {/* Search */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 pl-10 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  placeholder="Search providers"
+                />
               </div>
-              <div className="overflow-y-auto h-full pb-20">
+            </div>
+            
+            {/* Providers */}
+            <div className="flex-1 overflow-y-auto">
+              {filteredProviders.length === 0 ? (
+                <div className="py-8 text-center">
+                  <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No providers found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Try adjusting your search terms
+                  </p>
+                </div>
+              ) : (
                 <ul className="divide-y divide-gray-200">
-                  {filteredConversations.map((conversation) => (
-                    <li
-                      key={conversation.id}
-                      className={`hover:bg-gray-50 cursor-pointer ${
-                        selectedConversation?.id === conversation.id ? 'bg-blue-50' : ''
-                      }`}
-                      onClick={() => setSelectedConversation(conversation)}
+                  {filteredProviders.map((provider) => (
+                    <li 
+                      key={provider.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${selectedProviderId === provider.id ? 'bg-gray-50' : ''}`}
+                      onClick={() => setSelectedProviderId(provider.id)}
                     >
-                      <div className="px-4 py-4 sm:px-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 relative">
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={conversation.provider.avatar}
-                                alt={conversation.provider.name}
-                              />
-                              {conversation.unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                  {conversation.unreadCount}
-                                </span>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="flex items-center">
-                                <h3 className="text-sm font-medium text-gray-900">{conversation.provider.name}</h3>
-                                <span className="ml-2 text-xs text-gray-500">
-                                  {formatConversationTime(conversation.lastMessage.timestamp)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500 truncate">{conversation.provider.company}</p>
-                              <p className="text-xs text-gray-500 truncate">{conversation.project}</p>
-                              <p className={`text-sm truncate ${
-                                conversation.unreadCount > 0 ? 'font-semibold text-gray-900' : 'text-gray-500'
-                              }`}>
-                                {conversation.lastMessage.sender === 'homeowner' ? 'You: ' : ''}
-                                {conversation.lastMessage.text}
-                              </p>
-                            </div>
+                      <div className="px-4 py-4 sm:px-6 flex items-center">
+                        <div className="relative flex-shrink-0">
+                          <img
+                            className="h-12 w-12 rounded-full object-cover"
+                            src={provider.avatar}
+                            alt={provider.name}
+                          />
+                          {provider.online && (
+                            <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-white"></span>
+                          )}
+                        </div>
+                        <div className="ml-4 flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900 truncate">{provider.name}</p>
+                            {provider.unreadCount > 0 && (
+                              <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
+                                {provider.unreadCount}
+                              </span>
+                            )}
                           </div>
+                          <p className="text-sm text-gray-500 truncate">{provider.category}</p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {provider.online ? 'Online' : formatLastSeen(provider.lastSeen)}
+                          </p>
                         </div>
                       </div>
                     </li>
                   ))}
                 </ul>
-              </div>
-            </div>
-            
-            {/* Message area */}
-            <div className="w-2/3 flex flex-col">
-              {selectedConversation ? (
-                <>
-                  {/* Conversation header */}
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src={selectedConversation.provider.avatar}
-                        alt={selectedConversation.provider.name}
-                      />
-                      <div className="ml-4">
-                        <h3 className="text-sm font-medium text-gray-900">{selectedConversation.provider.name}</h3>
-                        <p className="text-sm text-gray-500">{selectedConversation.provider.company}</p>
-                        <p className="text-xs text-gray-500">{selectedConversation.project}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <EllipsisHorizontalIcon className="h-6 w-6" aria-hidden="true" />
-                    </button>
-                  </div>
-                  
-                  {/* Messages */}
-                  <div className="flex-1 p-4 overflow-y-auto">
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.sender === 'homeowner' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          {message.sender === 'provider' && (
-                            <img
-                              className="h-8 w-8 rounded-full mr-2 self-end"
-                              src={selectedConversation.provider.avatar}
-                              alt={selectedConversation.provider.name}
-                            />
-                          )}
-                          <div
-                            className={`rounded-lg px-4 py-2 max-w-xs sm:max-w-md ${
-                              message.sender === 'homeowner'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
-                          >
-                            <p className="text-sm">{message.text}</p>
-                            <p
-                              className={`text-xs mt-1 text-right ${
-                                message.sender === 'homeowner' ? 'text-blue-200' : 'text-gray-500'
-                              }`}
-                            >
-                              {formatMessageTime(message.timestamp)}
-                            </p>
-                          </div>
-                          {message.sender === 'homeowner' && (
-                            <img
-                              className="h-8 w-8 rounded-full ml-2 self-end"
-                              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                              alt="You"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Message input */}
-                  <div className="p-4 border-t border-gray-200">
-                    <form onSubmit={handleSendMessage} className="flex items-center">
-                      <button
-                        type="button"
-                        className="inline-flex items-center p-2 border border-transparent rounded-full text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <PaperClipIcon className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                      <input
-                        type="text"
-                        className="block w-full mx-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                      />
-                      <button
-                        type="submit"
-                        disabled={!newMessage.trim()}
-                        className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <PaperAirplaneIcon className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </form>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900">No conversation selected</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Select a conversation from the list to view messages.
-                    </p>
-                  </div>
-                </div>
               )}
             </div>
+          </div>
+          
+          {/* Conversation */}
+          <div className="hidden sm:flex flex-1 flex-col">
+            {selectedProvider ? (
+              <>
+                {/* Provider Header */}
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="relative flex-shrink-0">
+                      <img
+                        className="h-10 w-10 rounded-full object-cover"
+                        src={selectedProvider.avatar}
+                        alt={selectedProvider.name}
+                      />
+                      {selectedProvider.online && (
+                        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white"></span>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">{selectedProvider.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {selectedProvider.online ? 'Online' : formatLastSeen(selectedProvider.lastSeen)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <PhoneIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <VideoCameraIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <InformationCircleIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Messages */}
+                <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+                  {currentConversation.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No messages yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Start the conversation with {selectedProvider.name}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {currentConversation.map((msg, index) => {
+                        const isHomeowner = msg.sender === 'homeowner';
+                        const showTimestamp = index === 0 || 
+                          new Date(msg.timestamp).toDateString() !== 
+                          new Date(currentConversation[index - 1].timestamp).toDateString();
+                        
+                        return (
+                          <div key={msg.id}>
+                            {showTimestamp && (
+                              <div className="flex justify-center my-4">
+                                <span className="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full">
+                                  {new Date(msg.timestamp).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                            <div className={`flex ${isHomeowner ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
+                                isHomeowner 
+                                  ? 'bg-primary-600 text-white rounded-br-none' 
+                                  : 'bg-white text-gray-900 rounded-bl-none shadow'
+                              }`}>
+                                <p className="text-sm">{msg.text}</p>
+                                <p className={`text-xs mt-1 text-right ${
+                                  isHomeowner ? 'text-primary-100' : 'text-gray-500'
+                                }`}>
+                                  {formatTimestamp(msg.timestamp)}
+                                  {isHomeowner && (
+                                    <span className="ml-1">
+                                      {msg.read ? '✓✓' : '✓'}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Message Input */}
+                <div className="p-4 border-t border-gray-200">
+                  <form onSubmit={handleSendMessage} className="flex items-center">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <PaperClipIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <input
+                      type="text"
+                      name="message"
+                      id="message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm mx-2"
+                      placeholder={`Message ${selectedProvider.name}...`}
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <FaceSmileIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!message.trim()}
+                      className={`ml-2 inline-flex items-center rounded-full p-2 ${
+                        message.trim() 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2`}
+                    >
+                      <PaperAirplaneIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full bg-gray-50">
+                <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No conversation selected</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Choose a provider from the list to start messaging
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* Mobile: Show selected conversation or prompt to select */}
+          <div className="flex flex-col flex-1 sm:hidden">
+            {selectedProvider ? (
+              <>
+                {/* Provider Header */}
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProviderId(null)}
+                      className="mr-2 text-gray-400 hover:text-gray-500"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <div className="relative flex-shrink-0">
+                      <img
+                        className="h-8 w-8 rounded-full object-cover"
+                        src={selectedProvider.avatar}
+                        alt={selectedProvider.name}
+                      />
+                      {selectedProvider.online && (
+                        <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-green-400 ring-2 ring-white"></span>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">{selectedProvider.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {selectedProvider.online ? 'Online' : formatLastSeen(selectedProvider.lastSeen)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <PhoneIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-gray-300 bg-white p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <EllipsisHorizontalIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Messages */}
+                <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+                  {currentConversation.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No messages yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Start the conversation with {selectedProvider.name}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {currentConversation.map((msg, index) => {
+                        const isHomeowner = msg.sender === 'homeowner';
+                        const showTimestamp = index === 0 || 
+                          new Date(msg.timestamp).toDateString() !== 
+                          new Date(currentConversation[index - 1].timestamp).toDateString();
+                        
+                        return (
+                          <div key={msg.id}>
+                            {showTimestamp && (
+                              <div className="flex justify-center my-4">
+                                <span className="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full">
+                                  {new Date(msg.timestamp).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                            <div className={`flex ${isHomeowner ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                                isHomeowner 
+                                  ? 'bg-primary-600 text-white rounded-br-none' 
+                                  : 'bg-white text-gray-900 rounded-bl-none shadow'
+                              }`}>
+                                <p className="text-sm">{msg.text}</p>
+                                <p className={`text-xs mt-1 text-right ${
+                                  isHomeowner ? 'text-primary-100' : 'text-gray-500'
+                                }`}>
+                                  {formatTimestamp(msg.timestamp)}
+                                  {isHomeowner && (
+                                    <span className="ml-1">
+                                      {msg.read ? '✓✓' : '✓'}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Message Input */}
+                <div className="p-3 border-t border-gray-200">
+                  <form onSubmit={handleSendMessage} className="flex items-center">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <PaperClipIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <input
+                      type="text"
+                      name="message"
+                      id="message-mobile"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm mx-2"
+                      placeholder="Type a message..."
+                    />
+                    <button
+                      type="submit"
+                      disabled={!message.trim()}
+                      className={`inline-flex items-center rounded-full p-1.5 ${
+                        message.trim() 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2`}
+                    >
+                      <PaperAirplaneIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="p-4 text-center">
+                <p className="text-sm text-gray-500">
+                  Select a conversation from the list
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -596,4 +687,4 @@ const HomeownerMessages = () => {
   );
 };
 
-export default HomeownerMessages;
+export default Messages;

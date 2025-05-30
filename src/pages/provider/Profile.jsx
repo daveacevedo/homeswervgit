@@ -1,690 +1,1055 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { useApp } from '../../contexts/AppContext';
+import { useProvider } from '../../contexts/ProviderContext';
 import { 
-  PencilIcon, 
-  CheckIcon, 
-  StarIcon,
-  CameraIcon
+  UserIcon, 
+  BuildingOfficeIcon, 
+  PhoneIcon, 
+  EnvelopeIcon,
+  CameraIcon,
+  KeyIcon,
+  TagIcon,
+  WrenchScrewdriverIcon,
+  MapPinIcon,
+  GlobeAltIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
-import { format } from 'date-fns';
 
-const ProviderProfile = () => {
-  const { user } = useAuth();
-  const { userProfile, updateUserProfile } = useApp();
+const Profile = () => {
+  const { user, updateUserProfile, updatePassword } = useAuth();
+  const { providerProfile, updateProviderProfile } = useProvider();
   
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const [projects, setProjects] = useState([]);
-  
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    company_name: '',
+  const [businessInfo, setBusinessInfo] = useState({
+    businessName: '',
+    contactName: '',
+    email: '',
     phone: '',
-    bio: '',
-    services: [],
-    years_experience: '',
-    website: '',
     address: '',
     city: '',
     state: '',
-    zip: ''
+    zipCode: '',
+    website: '',
+    description: ''
   });
-
+  
+  const [serviceInfo, setServiceInfo] = useState({
+    categories: [],
+    services: [],
+    serviceArea: '',
+    serviceRadius: 25,
+    availability: {
+      monday: { available: true, start: '08:00', end: '17:00' },
+      tuesday: { available: true, start: '08:00', end: '17:00' },
+      wednesday: { available: true, start: '08:00', end: '17:00' },
+      thursday: { available: true, start: '08:00', end: '17:00' },
+      friday: { available: true, start: '08:00', end: '17:00' },
+      saturday: { available: false, start: '09:00', end: '15:00' },
+      sunday: { available: false, start: '09:00', end: '15:00' }
+    }
+  });
+  
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  
+  const [activeTab, setActiveTab] = useState('business');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  
+  // Available service categories
+  const availableCategories = [
+    { id: 'plumbing', name: 'Plumbing' },
+    { id: 'electrical', name: 'Electrical' },
+    { id: 'hvac', name: 'HVAC' },
+    { id: 'carpentry', name: 'Carpentry' },
+    { id: 'painting', name: 'Painting' },
+    { id: 'landscaping', name: 'Landscaping' },
+    { id: 'cleaning', name: 'Cleaning' },
+    { id: 'roofing', name: 'Roofing' },
+    { id: 'flooring', name: 'Flooring' },
+    { id: 'general', name: 'General Contracting' }
+  ];
+  
+  // Available services by category
+  const availableServices = {
+    plumbing: [
+      { id: 'plumbing-repair', name: 'Plumbing Repair' },
+      { id: 'pipe-installation', name: 'Pipe Installation' },
+      { id: 'drain-cleaning', name: 'Drain Cleaning' },
+      { id: 'water-heater', name: 'Water Heater Installation/Repair' },
+      { id: 'bathroom-remodel', name: 'Bathroom Remodeling' }
+    ],
+    electrical: [
+      { id: 'electrical-repair', name: 'Electrical Repair' },
+      { id: 'panel-upgrade', name: 'Panel Upgrade' },
+      { id: 'lighting-installation', name: 'Lighting Installation' },
+      { id: 'outlet-installation', name: 'Outlet Installation' },
+      { id: 'ceiling-fan', name: 'Ceiling Fan Installation' }
+    ],
+    hvac: [
+      { id: 'hvac-repair', name: 'HVAC Repair' },
+      { id: 'ac-installation', name: 'AC Installation' },
+      { id: 'heating-installation', name: 'Heating Installation' },
+      { id: 'duct-cleaning', name: 'Duct Cleaning' },
+      { id: 'thermostat', name: 'Thermostat Installation' }
+    ],
+    carpentry: [
+      { id: 'cabinet-installation', name: 'Cabinet Installation' },
+      { id: 'deck-building', name: 'Deck Building' },
+      { id: 'framing', name: 'Framing' },
+      { id: 'trim-work', name: 'Trim Work' },
+      { id: 'door-installation', name: 'Door Installation' }
+    ],
+    painting: [
+      { id: 'interior-painting', name: 'Interior Painting' },
+      { id: 'exterior-painting', name: 'Exterior Painting' },
+      { id: 'cabinet-painting', name: 'Cabinet Painting' },
+      { id: 'deck-staining', name: 'Deck Staining' },
+      { id: 'wallpaper', name: 'Wallpaper Installation/Removal' }
+    ],
+    landscaping: [
+      { id: 'lawn-maintenance', name: 'Lawn Maintenance' },
+      { id: 'garden-design', name: 'Garden Design' },
+      { id: 'tree-service', name: 'Tree Service' },
+      { id: 'irrigation', name: 'Irrigation Installation/Repair' },
+      { id: 'hardscaping', name: 'Hardscaping' }
+    ],
+    cleaning: [
+      { id: 'house-cleaning', name: 'House Cleaning' },
+      { id: 'deep-cleaning', name: 'Deep Cleaning' },
+      { id: 'move-in-out', name: 'Move In/Out Cleaning' },
+      { id: 'carpet-cleaning', name: 'Carpet Cleaning' },
+      { id: 'window-cleaning', name: 'Window Cleaning' }
+    ],
+    roofing: [
+      { id: 'roof-repair', name: 'Roof Repair' },
+      { id: 'roof-replacement', name: 'Roof Replacement' },
+      { id: 'gutter-installation', name: 'Gutter Installation' },
+      { id: 'skylight-installation', name: 'Skylight Installation' },
+      { id: 'roof-inspection', name: 'Roof Inspection' }
+    ],
+    flooring: [
+      { id: 'hardwood-installation', name: 'Hardwood Installation' },
+      { id: 'tile-installation', name: 'Tile Installation' },
+      { id: 'carpet-installation', name: 'Carpet Installation' },
+      { id: 'vinyl-installation', name: 'Vinyl Installation' },
+      { id: 'floor-refinishing', name: 'Floor Refinishing' }
+    ],
+    general: [
+      { id: 'home-renovation', name: 'Home Renovation' },
+      { id: 'handyman', name: 'Handyman Services' },
+      { id: 'kitchen-remodel', name: 'Kitchen Remodeling' },
+      { id: 'bathroom-remodel', name: 'Bathroom Remodeling' },
+      { id: 'basement-finishing', name: 'Basement Finishing' }
+    ]
+  };
+  
   useEffect(() => {
-    if (userProfile) {
-      setFormData({
-        first_name: userProfile.first_name || '',
-        last_name: userProfile.last_name || '',
-        company_name: userProfile.company_name || '',
-        phone: userProfile.phone || '',
-        bio: userProfile.bio || '',
-        services: userProfile.services || [],
-        years_experience: userProfile.years_experience || '',
-        website: userProfile.website || '',
-        address: userProfile.address || '',
-        city: userProfile.city || '',
-        state: userProfile.state || '',
-        zip: userProfile.zip || ''
+    if (providerProfile) {
+      setBusinessInfo({
+        businessName: providerProfile.businessName || '',
+        contactName: providerProfile.contactName || '',
+        email: user?.email || '',
+        phone: providerProfile.phone || '',
+        address: providerProfile.address || '',
+        city: providerProfile.city || '',
+        state: providerProfile.state || '',
+        zipCode: providerProfile.zipCode || '',
+        website: providerProfile.website || '',
+        description: providerProfile.description || ''
       });
       
-      fetchReviews();
-      fetchProjects();
+      if (providerProfile.categories) {
+        setServiceInfo(prev => ({
+          ...prev,
+          categories: providerProfile.categories || [],
+          services: providerProfile.services || [],
+          serviceArea: providerProfile.serviceArea || '',
+          serviceRadius: providerProfile.serviceRadius || 25,
+          availability: providerProfile.availability || prev.availability
+        }));
+      }
     }
-  }, [userProfile]);
-
-  const fetchReviews = async () => {
-    try {
-      setLoading(true);
-      
-      // In a real app, you would fetch reviews from your database
-      // For demo purposes, we'll use mock data
-      
-      // Mock reviews data
-      const mockReviews = [
-        {
-          id: 1,
-          client: 'Emily Wilson',
-          client_avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: 5,
-          comment: 'Excellent work! Very professional and completed the job ahead of schedule. The quality of work was outstanding and they were very clean and respectful of our home.',
-          date: new Date(2023, 4, 10),
-          project: 'Interior Painting'
-        },
-        {
-          id: 2,
-          client: 'David Lee',
-          client_avatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: 4,
-          comment: 'Good quality work and reasonable pricing. Would hire again for future projects. They were a bit late on the first day but made up for it by working longer hours.',
-          date: new Date(2023, 4, 5),
-          project: 'Roof Repair'
-        },
-        {
-          id: 3,
-          client: 'Sarah Johnson',
-          client_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: 5,
-          comment: 'I am extremely satisfied with the bathroom remodel. The attention to detail was impressive and they were very responsive to my questions and concerns throughout the project.',
-          date: new Date(2023, 3, 20),
-          project: 'Bathroom Remodel'
-        },
-        {
-          id: 4,
-          client: 'John Smith',
-          client_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: 4,
-          comment: 'The kitchen renovation turned out beautifully. They were knowledgeable and provided helpful suggestions throughout the process. The only reason for 4 stars instead of 5 is that the project took a bit longer than initially estimated.',
-          date: new Date(2023, 3, 15),
-          project: 'Kitchen Renovation'
-        }
-      ];
-      
-      setReviews(mockReviews);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      // In a real app, you would fetch projects from your database
-      // For demo purposes, we'll use mock data
-      
-      // Mock projects data
-      const mockProjects = [
-        {
-          id: 1,
-          title: 'Modern Kitchen Renovation',
-          description: 'Complete kitchen renovation with custom cabinets, quartz countertops, and new appliances.',
-          image: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          date: new Date(2023, 3, 15),
-          client: 'John Smith',
-          location: 'Anytown, CA'
-        },
-        {
-          id: 2,
-          title: 'Bathroom Remodel',
-          description: 'Full bathroom remodel including new shower, vanity, toilet, and tile work.',
-          image: 'https://images.pexels.com/photos/6585598/pexels-photo-6585598.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          date: new Date(2023, 3, 20),
-          client: 'Sarah Johnson',
-          location: 'Somewhere, CA'
-        },
-        {
-          id: 3,
-          title: 'Deck Installation',
-          description: 'Built a new cedar deck with railings and stairs in the backyard.',
-          image: 'https://images.pexels.com/photos/5997993/pexels-photo-5997993.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          date: new Date(2023, 4, 5),
-          client: 'Michael Brown',
-          location: 'Nowhere, CA'
-        },
-        {
-          id: 4,
-          title: 'Interior Painting',
-          description: 'Painted living room, dining room, and hallway with premium paint.',
-          image: 'https://images.pexels.com/photos/6444256/pexels-photo-6444256.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          date: new Date(2023, 4, 10),
-          client: 'Emily Wilson',
-          location: 'Anytown, CA'
-        }
-      ];
-      
-      setProjects(mockProjects);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    }
-  };
-
-  const handleInputChange = (e) => {
+  }, [providerProfile, user]);
+  
+  const handleBusinessInfoChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setBusinessInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
-
-  const handleServiceChange = (service) => {
-    const updatedServices = formData.services.includes(service)
-      ? formData.services.filter(s => s !== service)
-      : [...formData.services, service];
+  
+  const handleCategoryChange = (e) => {
+    const { value, checked } = e.target;
     
-    setFormData({ ...formData, services: updatedServices });
+    if (checked) {
+      // Add category
+      setServiceInfo(prev => ({
+        ...prev,
+        categories: [...prev.categories, value]
+      }));
+    } else {
+      // Remove category and its services
+      setServiceInfo(prev => ({
+        ...prev,
+        categories: prev.categories.filter(cat => cat !== value),
+        services: prev.services.filter(service => {
+          // Check if the service belongs to the category being removed
+          const serviceCategory = Object.keys(availableServices).find(cat => 
+            availableServices[cat].some(s => s.id === service)
+          );
+          return serviceCategory !== value;
+        })
+      }));
+    }
   };
-
-  const handleSubmit = async (e) => {
+  
+  const handleServiceChange = (e) => {
+    const { value, checked } = e.target;
+    
+    if (checked) {
+      // Add service
+      setServiceInfo(prev => ({
+        ...prev,
+        services: [...prev.services, value]
+      }));
+    } else {
+      // Remove service
+      setServiceInfo(prev => ({
+        ...prev,
+        services: prev.services.filter(service => service !== value)
+      }));
+    }
+  };
+  
+  const handleAvailabilityChange = (day, field, value) => {
+    setServiceInfo(prev => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        [day]: {
+          ...prev.availability[day],
+          [field]: field === 'available' ? value === 'true' : value
+        }
+      }
+    }));
+  };
+  
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleBusinessInfoSubmit = async (e) => {
     e.preventDefault();
     
     try {
       setLoading(true);
+      setMessage({ type: '', text: '' });
       
-      // In a real app, you would update the profile in your database
-      // For demo purposes, we'll just update the local state
+      // Update profile in database
+      await updateProviderProfile({
+        businessName: businessInfo.businessName,
+        contactName: businessInfo.contactName,
+        phone: businessInfo.phone,
+        address: businessInfo.address,
+        city: businessInfo.city,
+        state: businessInfo.state,
+        zipCode: businessInfo.zipCode,
+        website: businessInfo.website,
+        description: businessInfo.description
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update profile
-      // const { data, error } = await updateUserProfile(formData);
-      
-      // if (error) throw error;
-      
-      setEditing(false);
+      setMessage({
+        type: 'success',
+        text: 'Business information updated successfully!'
+      });
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating business information:', error);
+      setMessage({
+        type: 'error',
+        text: 'Failed to update business information. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
   };
-
-  // Helper function to render stars for ratings
-  const renderStars = (rating) => {
-    return Array(5).fill(0).map((_, i) => (
-      <StarIcon 
-        key={i} 
-        className={`h-5 w-5 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`} 
-        aria-hidden="true" 
-      />
-    ));
+  
+  const handleServiceInfoSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      setMessage({ type: '', text: '' });
+      
+      // Update service info in database
+      await updateProviderProfile({
+        categories: serviceInfo.categories,
+        services: serviceInfo.services,
+        serviceArea: serviceInfo.serviceArea,
+        serviceRadius: serviceInfo.serviceRadius,
+        availability: serviceInfo.availability
+      });
+      
+      setMessage({
+        type: 'success',
+        text: 'Service information updated successfully!'
+      });
+    } catch (error) {
+      console.error('Error updating service information:', error);
+      setMessage({
+        type: 'error',
+        text: 'Failed to update service information. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  // Format date
-  const formatDate = (date) => {
-    return format(date, 'MMM d, yyyy');
+  
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate passwords
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({
+        type: 'error',
+        text: 'New passwords do not match.'
+      });
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 8) {
+      setMessage({
+        type: 'error',
+        text: 'Password must be at least 8 characters long.'
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setMessage({ type: '', text: '' });
+      
+      // Update password
+      await updatePassword(passwordData.currentPassword, passwordData.newPassword);
+      
+      // Clear form
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      setMessage({
+        type: 'success',
+        text: 'Password updated successfully!'
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setMessage({
+        type: 'error',
+        text: 'Failed to update password. Please check your current password and try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  // Available services
-  const availableServices = [
-    'Kitchen Renovation',
-    'Bathroom Remodeling',
-    'Deck Building',
-    'Painting',
-    'Flooring',
-    'Electrical',
-    'Plumbing',
-    'Roofing',
-    'Landscaping',
-    'Carpentry'
-  ];
-
-  if (loading && !userProfile) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Profile</h1>
-      </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        {/* Profile header */}
-        <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="relative h-40 bg-blue-600">
-            <button
-              type="button"
-              className="absolute top-2 right-2 p-2 rounded-full bg-white bg-opacity-75 text-gray-700 hover:bg-opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <CameraIcon className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-end -mt-16">
-            <div className="flex-shrink-0 relative">
-              <img
-                className="h-24 w-24 rounded-full ring-4 ring-white sm:h-32 sm:w-32"
-                src={userProfile?.avatar_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
-                alt=""
-              />
-              <button
-                type="button"
-                className="absolute bottom-0 right-0 p-1 rounded-full bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <CameraIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="mt-6 sm:mt-0 sm:ml-6 flex-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {userProfile?.first_name} {userProfile?.last_name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{userProfile?.company_name || 'Your Company Name'}</p>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setEditing(!editing)}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <PencilIcon className="-ml-1 mr-2 h-5 w-5 text-gray-400" aria-hidden="true" />
-                    Edit Profile
-                  </button>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center">
-                <div className="flex items-center">
-                  {renderStars(4.5)}
-                </div>
-                <span className="ml-2 text-sm text-gray-500">4.5 out of 5 stars ({reviews.length} reviews)</span>
-              </div>
-            </div>
-          </div>
+    <div>
+      <div className="md:flex md:items-center md:justify-between mb-8">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+            Business Profile
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your business information and service offerings
+          </p>
         </div>
-
-        {/* Profile content */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Profile information */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 className="text-lg font-medium leading-6 text-gray-900">Profile Information</h3>
-                {!editing && (
-                  <button
-                    type="button"
-                    onClick={() => setEditing(true)}
-                    className="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <PencilIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
+      </div>
+      
+      {/* Profile Content */}
+      <div className="bg-white shadow sm:rounded-lg">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('business')}
+              className={`${
+                activeTab === 'business'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Business Information
+            </button>
+            <button
+              onClick={() => setActiveTab('services')}
+              className={`${
+                activeTab === 'services'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Services & Availability
+            </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`${
+                activeTab === 'security'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Security
+            </button>
+          </nav>
+        </div>
+        
+        {/* Message Alert */}
+        {message.text && (
+          <div className={`mx-6 mt-6 rounded-md p-4 ${
+            message.type === 'success' ? 'bg-green-50' : 'bg-red-50'
+          }`}>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                {message.type === 'success' ? (
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
                 )}
               </div>
-              {editing ? (
-                <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-                  <form onSubmit={handleSubmit}>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
-                            First name
-                          </label>
+              <div className="ml-3">
+                <p className={`text-sm font-medium ${
+                  message.type === 'success' ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  {message.text}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Business Information Tab */}
+        {activeTab === 'business' && (
+          <div className="px-6 py-6">
+            <form onSubmit={handleBusinessInfoSubmit}>
+              <div className="space-y-6">
+                {/* Business Logo */}
+                <div className="flex items-center">
+                  <div className="h-24 w-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {providerProfile?.logoURL ? (
+                      <img
+                        src={providerProfile.logoURL}
+                        alt="Business Logo"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <BuildingOfficeIcon className="h-12 w-12 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="ml-5">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    >
+                      <CameraIcon className="-ml-1 mr-2 h-5 w-5 text-gray-400" aria-hidden="true" />
+                      Change logo
+                    </button>
+                    <p className="mt-2 text-xs text-gray-500">
+                      JPG, GIF or PNG. 1MB max.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Business Name */}
+                <div>
+                  <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
+                    Business Name
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      name="businessName"
+                      id="businessName"
+                      value={businessInfo.businessName}
+                      onChange={handleBusinessInfoChange}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                {/* Contact Name */}
+                <div>
+                  <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+                    Contact Name
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      name="contactName"
+                      id="contactName"
+                      value={businessInfo.contactName}
+                      onChange={handleBusinessInfoChange}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                {/* Contact Info */}
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email address
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <EnvelopeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </div>
+                      <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={businessInfo.email}
+                        disabled
+                        className="bg-gray-50 block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Contact support to change your email address
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                      Phone number
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <PhoneIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </div>
+                      <input
+                        type="tel"
+                        name="phone"
+                        id="phone"
+                        value={businessInfo.phone}
+                        onChange={handleBusinessInfoChange}
+                        className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Website */}
+                <div>
+                  <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                    Website
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <GlobeAltIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </div>
+                    <input
+                      type="text"
+                      name="website"
+                      id="website"
+                      value={businessInfo.website}
+                      onChange={handleBusinessInfoChange}
+                      placeholder="https://"
+                      className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                {/* Address */}
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                    Business Address
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MapPinIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </div>
+                    <input
+                      type="text"
+                      name="address"
+                      id="address"
+                      value={businessInfo.address}
+                      onChange={handleBusinessInfoChange}
+                      className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                      City
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        name="city"
+                        id="city"
+                        value={businessInfo.city}
+                        onChange={handleBusinessInfoChange}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                      State
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        name="state"
+                        id="state"
+                        value={businessInfo.state}
+                        onChange={handleBusinessInfoChange}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">
+                      ZIP / Postal code
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        name="zipCode"
+                        id="zipCode"
+                        value={businessInfo.zipCode}
+                        onChange={handleBusinessInfoChange}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Business Description */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    Business Description
+                  </label>
+                  <div className="mt-1">
+                    <textarea
+                      id="description"
+                      name="description"
+                      rows={4}
+                      value={businessInfo.description}
+                      onChange={handleBusinessInfoChange}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="Describe your business, experience, and what sets you apart..."
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                      loading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+        
+        {/* Services & Availability Tab */}
+        {activeTab === 'services' && (
+          <div className="px-6 py-6">
+            <form onSubmit={handleServiceInfoSubmit}>
+              <div className="space-y-6">
+                {/* Service Categories */}
+                <div>
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">Service Categories</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Select the categories of services you offer
+                  </p>
+                  
+                  <div className="mt-4 grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6">
+                    {availableCategories.map((category) => (
+                      <div key={category.id} className="relative flex items-start">
+                        <div className="flex h-5 items-center">
                           <input
-                            type="text"
-                            name="first_name"
-                            id="first_name"
-                            value={formData.first_name}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            id={`category-${category.id}`}
+                            name={`category-${category.id}`}
+                            type="checkbox"
+                            value={category.id}
+                            checked={serviceInfo.categories.includes(category.id)}
+                            onChange={handleCategoryChange}
+                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                           />
                         </div>
-                        <div>
-                          <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
-                            Last name
+                        <div className="ml-3 text-sm">
+                          <label htmlFor={`category-${category.id}`} className="font-medium text-gray-700">
+                            {category.name}
                           </label>
-                          <input
-                            type="text"
-                            name="last_name"
-                            id="last_name"
-                            value={formData.last_name}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
                         </div>
                       </div>
-                      <div>
-                        <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">
-                          Company name
-                        </label>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Specific Services */}
+                {serviceInfo.categories.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium leading-6 text-gray-900">Specific Services</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Select the specific services you offer in each category
+                    </p>
+                    
+                    <div className="mt-4 space-y-6">
+                      {serviceInfo.categories.map((categoryId) => {
+                        const category = availableCategories.find(c => c.id === categoryId);
+                        return (
+                          <div key={categoryId}>
+                            <h4 className="text-sm font-medium text-gray-900">{category.name}</h4>
+                            <div className="mt-2 grid grid-cols-1 gap-y-2 sm:grid-cols-2 sm:gap-x-6">
+                              {availableServices[categoryId].map((service) => (
+                                <div key={service.id} className="relative flex items-start">
+                                  <div className="flex h-5 items-center">
+                                    <input
+                                      id={`service-${service.id}`}
+                                      name={`service-${service.id}`}
+                                      type="checkbox"
+                                      value={service.id}
+                                      checked={serviceInfo.services.includes(service.id)}
+                                      onChange={handleServiceChange}
+                                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    />
+                                  </div>
+                                  <div className="ml-3 text-sm">
+                                    <label htmlFor={`service-${service.id}`} className="font-medium text-gray-700">
+                                      {service.name}
+                                    </label>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Service Area */}
+                <div>
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">Service Area</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Define the geographic area where you provide services
+                  </p>
+                  
+                  <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div className="sm:col-span-4">
+                      <label htmlFor="serviceArea" className="block text-sm font-medium text-gray-700">
+                        Service Area Center
+                      </label>
+                      <div className="mt-1">
                         <input
                           type="text"
-                          name="company_name"
-                          id="company_name"
-                          value={formData.company_name}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          name="serviceArea"
+                          id="serviceArea"
+                          value={serviceInfo.serviceArea}
+                          onChange={(e) => setServiceInfo(prev => ({ ...prev, serviceArea: e.target.value }))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="City or ZIP code"
                         />
                       </div>
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                          Phone
-                        </label>
-                        <input
-                          type="text"
-                          name="phone"
-                          id="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                          Bio
-                        </label>
-                        <textarea
-                          id="bio"
-                          name="bio"
-                          rows={3}
-                          value={formData.bio}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="years_experience" className="block text-sm font-medium text-gray-700">
-                          Years of experience
-                        </label>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Enter the city or ZIP code that is the center of your service area
+                      </p>
+                    </div>
+                    
+                    <div className="sm:col-span-2">
+                      <label htmlFor="serviceRadius" className="block text-sm font-medium text-gray-700">
+                        Service Radius (miles)
+                      </label>
+                      <div className="mt-1">
                         <input
                           type="number"
-                          name="years_experience"
-                          id="years_experience"
-                          value={formData.years_experience}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          name="serviceRadius"
+                          id="serviceRadius"
+                          min="1"
+                          max="100"
+                          value={serviceInfo.serviceRadius}
+                          onChange={(e) => setServiceInfo(prev => ({ ...prev, serviceRadius: parseInt(e.target.value) }))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                         />
                       </div>
-                      <div>
-                        <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                          Website
-                        </label>
-                        <input
-                          type="text"
-                          name="website"
-                          id="website"
-                          value={formData.website}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                          Address
-                        </label>
-                        <input
-                          type="text"
-                          name="address"
-                          id="address"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
-                        <div>
-                          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                            City
-                          </label>
-                          <input
-                            type="text"
-                            name="city"
-                            id="city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-                            State
-                          </label>
-                          <input
-                            type="text"
-                            name="state"
-                            id="state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="zip" className="block text-sm font-medium text-gray-700">
-                            ZIP
-                          </label>
-                          <input
-                            type="text"
-                            name="zip"
-                            id="zip"
-                            value={formData.zip}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Services</label>
-                        <div className="mt-2 grid grid-cols-1 gap-y-2 sm:grid-cols-2">
-                          {availableServices.map((service) => (
-                            <div key={service} className="flex items-center">
-                              <input
-                                id={`service-${service}`}
-                                name={`service-${service}`}
-                                type="checkbox"
-                                checked={formData.services.includes(service)}
-                                onChange={() => handleServiceChange(service)}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                              />
-                              <label htmlFor={`service-${service}`} className="ml-3 text-sm text-gray-700">
-                                {service}
-                              </label>
-                            </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Availability */}
+                <div>
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">Availability</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Set your regular working hours
+                  </p>
+                  
+                  <div className="mt-4">
+                    <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                              Day
+                            </th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              Available
+                            </th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              Start Time
+                            </th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              End Time
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {Object.entries(serviceInfo.availability).map(([day, dayInfo]) => (
+                            <tr key={day}>
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                {day.charAt(0).toUpperCase() + day.slice(1)}
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <select
+                                  value={dayInfo.available.toString()}
+                                  onChange={(e) => handleAvailabilityChange(day, 'available', e.target.value)}
+                                  className="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                >
+                                  <option value="true">Yes</option>
+                                  <option value="false">No</option>
+                                </select>
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="time"
+                                  value={dayInfo.start}
+                                  onChange={(e) => handleAvailabilityChange(day, 'start', e.target.value)}
+                                  disabled={!dayInfo.available}
+                                  className={`rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                                    !dayInfo.available ? 'bg-gray-100 text-gray-400' : ''
+                                  }`}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="time"
+                                  value={dayInfo.end}
+                                  onChange={(e) => handleAvailabilityChange(day, 'end', e.target.value)}
+                                  disabled={!dayInfo.available}
+                                  className={`rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                                    !dayInfo.available ? 'bg-gray-100 text-gray-400' : ''
+                                  }`}
+                                />
+                              </td>
+                            </tr>
                           ))}
-                        </div>
-                      </div>
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setEditing(false)}
-                        className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        {loading ? (
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <CheckIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-                        )}
-                        Save
-                      </button>
-                    </div>
-                  </form>
+                  </div>
                 </div>
-              ) : (
-                <div className="border-t border-gray-200">
-                  <dl>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.first_name} {formData.last_name}
-                      </dd>
-                    </div>
-                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Company name</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.company_name || 'Not specified'}
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Email address</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {user?.email}
-                      </dd>
-                    </div>
-                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.phone || 'Not specified'}
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Bio</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.bio || 'No bio provided'}
-                      </dd>
-                    </div>
-                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Years of experience</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.years_experience || 'Not specified'}
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Website</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.website ? (
-                          <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500">
-                            {formData.website}
-                          </a>
-                        ) : (
-                          'Not specified'
-                        )}
-                      </dd>
-                    </div>
-                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Address</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.address ? (
-                          <>
-                            {formData.address}<br />
-                            {formData.city}, {formData.state} {formData.zip}
-                          </>
-                        ) : (
-                          'Not specified'
-                        )}
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Services</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formData.services && formData.services.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {formData.services.map((service) => (
-                              <span
-                                key={service}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          'No services specified'
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
+                
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                      loading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            </form>
           </div>
-
-          {/* Reviews and projects */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Reviews */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 className="text-lg font-medium leading-6 text-gray-900">Reviews</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  4.5 / 5
-                </span>
-              </div>
-              <div className="border-t border-gray-200">
-                <ul className="divide-y divide-gray-200">
-                  {reviews.map((review) => (
-                    <li key={review.id} className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <img
-                            className="h-10 w-10 rounded-full"
-                            src={review.client_avatar}
-                            alt={review.client}
-                          />
-                          <div className="ml-3">
-                            <p className="text-sm font-medium text-gray-900">{review.client}</p>
-                            <p className="text-xs text-gray-500">{formatDate(review.date)}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          {renderStars(review.rating)}
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">{review.comment}</p>
-                      </div>
-                      <div className="mt-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {review.project}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Projects */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 className="text-lg font-medium leading-6 text-gray-900">Projects</h3>
-                <button
-                  type="button"
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <PlusIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
-                  Add Project
-                </button>
-              </div>
-              <div className="border-t border-gray-200">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
-                  {projects.map((project) => (
-                    <div key={project.id} className="bg-white overflow-hidden shadow rounded-lg">
-                      <div className="h-48 w-full overflow-hidden">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="px-4 py-4">
-                        <h4 className="text-lg font-medium text-gray-900">{project.title}</h4>
-                        <p className="mt-1 text-sm text-gray-500">{project.description}</p>
-                        <div className="mt-2 flex justify-between items-center">
-                          <p className="text-xs text-gray-500">{formatDate(project.date)}</p>
-                          <p className="text-xs text-gray-500">{project.location}</p>
-                        </div>
-                      </div>
+        )}
+        
+        {/* Security Tab */}
+        {activeTab === 'security' && (
+          <div className="px-6 py-6">
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">Change Password</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Update your password to keep your account secure
+                  </p>
+                </div>
+                
+                <div>
+                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                    Current password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <KeyIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                     </div>
-                  ))}
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      id="currentPassword"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                    New password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <KeyIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </div>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      id="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      minLength={8}
+                      className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Password must be at least 8 characters long
+                  </p>
+                </div>
+                
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                    Confirm new password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <KeyIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </div>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      id="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      className="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                      loading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Password'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+            
+            <div className="mt-10 pt-10 border-t border-gray-200">
+              <div>
+                <h3 className="text-lg font-medium leading-6 text-gray-900">Account Security</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Additional security options for your account
+                </p>
+              </div>
+              
+              <div className="mt-6">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="twoFactor"
+                      name="twoFactor"
+                      type="checkbox"
+                      className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="twoFactor" className="font-medium text-gray-700">
+                      Enable two-factor authentication
+                    </label>
+                    <p className="text-gray-500">
+                      Add an extra layer of security to your account by requiring a verification code in addition to your password.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  >
+                    Set up two-factor authentication
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default ProviderProfile;
+export default Profile;

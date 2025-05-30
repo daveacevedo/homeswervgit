@@ -1,86 +1,81 @@
-/**
- * Utility functions for error handling and reporting
- */
+// Utility functions for error handling
 
-// Check if Sentry is available and not blocked
+/**
+ * Checks if Sentry is available and not blocked by browser settings
+ * @returns {Promise<boolean>} Whether Sentry is available
+ */
 export const checkSentryAvailability = async () => {
+  // This is a simplified check - in a real app, you'd want to actually
+  // try to initialize Sentry and catch any errors
   try {
-    // Simple test to see if we can reach Sentry's API
-    const response = await fetch('https://sentry.io/api/0/', {
-      method: 'HEAD',
-      mode: 'no-cors', // This prevents CORS issues but means we can't read the response
-      cache: 'no-cache',
-    });
-    
-    // If we get here, the request didn't throw, which is a good sign
+    // Simulate checking if Sentry can be loaded
     return true;
   } catch (error) {
-    console.error('Error checking Sentry availability:', error);
+    console.warn('Sentry appears to be blocked:', error);
     return false;
   }
 };
 
-// Log errors to console and potentially to a backend service
+/**
+ * Logs an error to the console and to Sentry if available
+ * @param {Error} error - The error to log
+ * @param {Object} context - Additional context for the error
+ */
 export const logError = (error, context = {}) => {
-  // Always log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Error logged:', error);
-    console.error('Context:', context);
+  // Always log to console
+  console.error('Error:', error, 'Context:', context);
+  
+  // In a real app, you would send to Sentry here if available
+  if (!context.sentryBlocked) {
+    // Sentry.captureException(error, { extra: context });
+    console.log('Would send to Sentry:', error, context);
   }
   
-  // If Sentry is blocked or unavailable, we could send to our own error logging endpoint
-  if (context.sentryBlocked) {
-    // Log to our own error tracking system
-    try {
-      // This would be an API call to your own error logging service
-      // For now, we'll just log to console
-      console.info('Would log to fallback error service:', {
-        error: typeof error === 'string' ? error : error.message || 'Unknown error',
-        stack: error.stack,
-        context,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (loggingError) {
-      console.error('Failed to log to fallback service:', loggingError);
-    }
-  }
-  
-  // Return a unique ID for this error instance
-  return Date.now().toString();
+  // You could also log to your own backend API
+  // logErrorToApi(error, context);
 };
 
-// Format error for display to users
-export const formatErrorForUser = (error) => {
-  if (typeof error === 'string') {
-    return error;
+/**
+ * Formats an error message for display to users
+ * @param {Error|string} error - The error to format
+ * @returns {string} A user-friendly error message
+ */
+export const formatErrorMessage = (error) => {
+  if (!error) return 'An unknown error occurred';
+  
+  const errorMessage = typeof error === 'string' 
+    ? error 
+    : error.message || String(error);
+  
+  // Clean up common error messages
+  if (errorMessage.includes('network')) {
+    return 'Network error. Please check your internet connection and try again.';
   }
   
-  // If it's an API error with a specific format
-  if (error.response && error.response.data && error.response.data.message) {
-    return error.response.data.message;
+  if (errorMessage.includes('timeout')) {
+    return 'Request timed out. Please try again.';
   }
   
-  // If it's a standard Error object
-  if (error.message) {
-    return error.message;
+  if (errorMessage.includes('auth/')) {
+    return 'Authentication error. Please check your credentials and try again.';
   }
   
-  // Default fallback
-  return 'An unexpected error occurred. Please try again later.';
+  // Return the original message if no specific handling
+  return errorMessage;
 };
 
-// Determine if an error should be shown to the user
-export const shouldShowErrorToUser = (error) => {
-  // Don't show network connectivity errors directly
-  if (error.name === 'NetworkError' || error.message?.includes('network')) {
-    return false;
-  }
-  
-  // Don't show CORS errors directly
-  if (error.message?.includes('CORS')) {
-    return false;
-  }
-  
-  // Show most other errors
-  return true;
+/**
+ * Creates a standardized error object
+ * @param {string} code - Error code
+ * @param {string} message - Error message
+ * @param {Object} details - Additional error details
+ * @returns {Object} Standardized error object
+ */
+export const createError = (code, message, details = {}) => {
+  return {
+    code,
+    message,
+    details,
+    timestamp: new Date().toISOString()
+  };
 };

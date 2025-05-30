@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { supabase } from '../utils/supabaseClient';
 
 const ProviderContext = createContext();
 
@@ -11,105 +11,60 @@ export function useProvider() {
 export function ProviderProvider({ children }) {
   const { user } = useAuth();
   const [providerProfile, setProviderProfile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Create provider profile
-  const createProviderProfile = async (profileData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('provider_profiles')
-        .insert([
-          { 
-            user_id: user.id,
-            business_name: profileData.business_name,
-            contact_name: profileData.contact_name,
-            email: profileData.email,
-            phone: profileData.phone || null,
-            address: profileData.address || null,
-            city: profileData.city || null,
-            state: profileData.state || null,
-            zip_code: profileData.zip_code || null,
-            service_categories: profileData.service_categories || [],
-            business_description: profileData.business_description || null,
-            years_in_business: profileData.years_in_business || null,
-            license_number: profileData.license_number || null,
-            insurance_info: profileData.insurance_info || null,
-          }
-        ])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setProviderProfile(data);
-      return data;
-    } catch (error) {
-      console.error('Error creating provider profile:', error);
-      setError(error.message);
-      throw error;
-    } finally {
+  // Fetch provider profile when user changes
+  useEffect(() => {
+    if (!user) {
+      setProviderProfile(null);
       setLoading(false);
+      return;
     }
-  };
 
-  // Get provider profile
-  const getProviderProfile = async () => {
-    if (!user) return null;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('provider_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+    const fetchProviderProfile = async () => {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('provider_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        setProviderProfile(data);
+      } catch (error) {
+        console.error('Error fetching provider profile:', error.message);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
-      
-      setProviderProfile(data || null);
-      return data;
-    } catch (error) {
-      console.error('Error fetching provider profile:', error);
-      setError(error.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchProviderProfile();
+  }, [user]);
 
   // Update provider profile
-  const updateProviderProfile = async (profileData) => {
-    if (!user) return null;
-    
+  const updateProviderProfile = async (updates) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!user) throw new Error('No user logged in');
       
       const { data, error } = await supabase
         .from('provider_profiles')
-        .update(profileData)
+        .update(updates)
         .eq('user_id', user.id)
         .select()
         .single();
-      
+
       if (error) throw error;
       
       setProviderProfile(data);
       return data;
     } catch (error) {
-      console.error('Error updating provider profile:', error);
-      setError(error.message);
+      console.error('Error updating provider profile:', error.message);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -117,9 +72,7 @@ export function ProviderProvider({ children }) {
     providerProfile,
     loading,
     error,
-    createProviderProfile,
-    getProviderProfile,
-    updateProviderProfile,
+    updateProviderProfile
   };
 
   return (

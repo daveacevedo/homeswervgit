@@ -15,8 +15,9 @@ function classNames(...classes) {
 }
 
 const Header = () => {
-  const { user, signOut } = useAuth();
-  const { activeRole, userProfile } = useApp();
+  const { user, signOut } = useAuth() || { user: null, signOut: () => {} };
+  const { activeRole, userProfile } = useApp() || { activeRole: null, userProfile: null };
+  
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const featuresRef = useRef(null);
   
@@ -195,7 +196,7 @@ const Header = () => {
                         <Menu.Button className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                           <span className="sr-only">Open user menu</span>
                           <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium">
-                            {userProfile?.first_name?.[0] || userProfile?.contact_name?.[0] || user.email[0].toUpperCase()}
+                            {userProfile?.first_name?.[0] || userProfile?.contact_name?.[0] || (user?.email?.[0] || 'U').toUpperCase()}
                           </div>
                         </Menu.Button>
                       </div>
@@ -212,7 +213,7 @@ const Header = () => {
                           <div className="px-4 py-2 text-xs text-gray-500">
                             Signed in as
                             <div className="font-medium text-gray-900 truncate">
-                              {user.email}
+                              {user?.email || 'User'}
                             </div>
                           </div>
                           
@@ -226,7 +227,7 @@ const Header = () => {
                           <Menu.Item>
                             {({ active }) => (
                               <Link
-                                to={`/${activeRole}/profile`}
+                                to={activeRole ? `/${activeRole}/profile` : "/profile"}
                                 className={classNames(
                                   active ? 'bg-gray-100' : '',
                                   'block px-4 py-2 text-sm text-gray-700'
@@ -239,7 +240,7 @@ const Header = () => {
                           <Menu.Item>
                             {({ active }) => (
                               <Link
-                                to={`/${activeRole}/settings`}
+                                to={activeRole ? `/${activeRole}/settings` : "/settings"}
                                 className={classNames(
                                   active ? 'bg-gray-100' : '',
                                   'block px-4 py-2 text-sm text-gray-700'

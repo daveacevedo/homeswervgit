@@ -1,230 +1,375 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ClipboardDocumentListIcon, 
-  UserGroupIcon, 
-  CalendarIcon, 
-  ChatBubbleLeftRightIcon,
-  PresentationChartBarIcon,
-  StarIcon
-} from '@heroicons/react/24/outline';
 
 const HomeownerFeatures = () => {
+  // Features data
+  const features = [
+    {
+      name: 'Verified Providers',
+      description: 'Connect with service providers who have been thoroughly vetted, background-checked, and reviewed by other homeowners.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Multiple Quotes',
+      description: 'Receive and compare quotes from multiple service providers to find the best fit for your project and budget.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Secure Payments',
+      description: 'Pay for services through our secure platform, with funds only released when you approve the completed work.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Service Guarantee',
+      description: "If you're not satisfied with the service, we'll work with you to make it right or provide a refund.",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      )
+    },
+    {
+      name: 'Project Management',
+      description: 'Track the progress of your projects, communicate with service providers, and manage all your home services in one place.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      )
+    },
+    {
+      name: 'Service History',
+      description: 'Keep a detailed record of all your home services, including dates, providers, costs, and warranty information.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    }
+  ];
+
+  // Benefits data
+  const benefits = [
+    {
+      title: 'Save Time',
+      description: 'No more endless phone calls or waiting for providers to show up for estimates. Get multiple quotes quickly and book services on your schedule.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      title: 'Save Money',
+      description: 'Compare quotes from multiple providers to find the best value. Our transparent pricing means no hidden fees or surprise charges.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      title: 'Reduce Stress',
+      description: 'Rest easy knowing that all providers are verified and your payments are secure. Our satisfaction guarantee gives you peace of mind.',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    }
+  ];
+
+  // Testimonials data
+  const testimonials = [
+    {
+      content: "Home Swerv has completely changed how I manage home repairs. I found a great plumber within hours of posting my project, and the work was completed the next day. The secure payment system gave me peace of mind.",
+      author: "Sarah Johnson",
+      location: "Denver, CO",
+      image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    },
+    {
+      content: "I used to dread finding contractors for home projects. With Home Swerv, I can easily compare quotes and reviews to find the best provider. The project management tools help me stay organized and on budget.",
+      author: "Michael Rodriguez",
+      location: "Austin, TX",
+      image: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    },
+    {
+      content: "As a new homeowner, I had no idea where to start with maintenance and repairs. Home Swerv made it easy to find reliable professionals and keep track of all my home services in one place.",
+      author: "Emily Chen",
+      location: "Seattle, WA",
+      image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    }
+  ];
+
   return (
     <div className="bg-white">
-      {/* Hero section */}
-      <div className="relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <svg
-              className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
-              fill="currentColor"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <polygon points="50,0 100,0 50,100 0,100" />
-            </svg>
-
-            <div className="pt-10 mx-auto max-w-7xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-8 xl:pt-28">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block xl:inline">Simplify your</span>{' '}
-                  <span className="block text-blue-600 xl:inline">home improvement</span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Home Swerv gives homeowners powerful tools to plan, manage, and complete home improvement projects while earning rewards.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link
-                      to="/register"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
-                    >
-                      Get started
-                    </Link>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <a
-                      href="#features"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10"
-                    >
-                      Learn more
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+      {/* Hero Section */}
+      <div className="relative bg-gray-900">
+        <div className="absolute inset-0">
           <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
+            className="w-full h-full object-cover"
             src="https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-            alt="Home renovation"
+            alt="Homeowner with tablet"
           />
+          <div className="absolute inset-0 bg-gray-900 opacity-70"></div>
         </div>
-      </div>
-
-      {/* Features section */}
-      <div id="features" className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Features for Homeowners</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need for successful home projects
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Our comprehensive platform helps you plan, manage, and complete your home improvement projects with ease.
-            </p>
-          </div>
-
-          <div className="mt-10">
-            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <ClipboardDocumentListIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Project Management</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Create and manage projects, set budgets, track progress, and communicate with service providers all in one place.
-                </dd>
-              </div>
-
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <UserGroupIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Verified Providers</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Find and hire verified service providers with reviews from other homeowners in your community.
-                </dd>
-              </div>
-
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <PresentationChartBarIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Budget Estimation</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Get AI-powered cost estimates for your projects before you start, helping you plan your budget effectively.
-                </dd>
-              </div>
-
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <CalendarIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Scheduling</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Schedule appointments, set reminders, and coordinate with service providers using our integrated calendar.
-                </dd>
-              </div>
-
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <ChatBubbleLeftRightIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Secure Messaging</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Communicate directly with service providers through our secure messaging system, keeping all project communications in one place.
-                </dd>
-              </div>
-
-              <div className="relative">
-                <dt>
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                    <StarIcon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Community Rewards</p>
-                </dt>
-                <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Earn points for completed projects, reviews, and community participation that can be redeemed for discounts on future services.
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      {/* Testimonials section */}
-      <div className="bg-gray-50 py-16 lg:py-24">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative lg:flex lg:items-center">
-            <div className="hidden lg:block lg:flex-shrink-0">
-              <img
-                className="h-64 w-64 rounded-full xl:h-80 xl:w-80 object-cover"
-                src="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-                alt="Happy homeowner"
-              />
-            </div>
-
-            <div className="relative lg:ml-10">
-              <svg
-                className="absolute top-0 left-0 transform -translate-x-8 -translate-y-24 h-36 w-36 text-blue-200 opacity-50"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 144 144"
-                aria-hidden="true"
-              >
-                <path
-                  strokeWidth={2}
-                  d="M41.485 15C17.753 31.753 1 59.208 1 89.455c0 24.664 14.891 39.09 32.109 39.09 16.287 0 28.386-13.03 28.386-28.387 0-15.356-10.703-26.524-24.663-26.524-2.792 0-6.515.465-7.446.93 2.327-15.821 17.218-34.435 32.11-43.742L41.485 15zm80.04 0c-23.268 16.753-40.02 44.208-40.02 74.455 0 24.664 14.891 39.09 32.109 39.09 15.822 0 28.386-13.03 28.386-28.387 0-15.356-11.168-26.524-25.129-26.524-2.792 0-6.049.465-6.98.93 2.327-15.821 16.753-34.435 31.644-43.742L121.525 15z"
-                />
-              </svg>
-              <blockquote className="relative">
-                <div className="text-2xl leading-9 font-medium text-gray-900">
-                  <p>
-                    "Home Swerv has completely transformed how I manage my home renovation projects. The project management tools and verified provider network saved me countless hours and headaches."
-                  </p>
-                </div>
-                <footer className="mt-8">
-                  <div className="flex">
-                    <div className="flex-shrink-0 lg:hidden">
-                      <img
-                        className="h-12 w-12 rounded-full"
-                        src="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-                        alt="Happy homeowner"
-                      />
-                    </div>
-                    <div className="ml-4 lg:ml-0">
-                      <div className="text-base font-medium text-gray-900">Sarah Johnson</div>
-                      <div className="text-base font-medium text-blue-600">Homeowner in Portland, OR</div>
-                    </div>
-                  </div>
-                </footer>
-              </blockquote>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA section */}
-      <div className="bg-blue-700">
-        <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-            <span className="block">Ready to start your next project?</span>
-            <span className="block">Sign up for free today.</span>
-          </h2>
-          <p className="mt-4 text-lg leading-6 text-blue-200">
-            Join thousands of homeowners already using Home Swerv to simplify their home improvement projects.
+        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            For Homeowners
+          </h1>
+          <p className="mt-6 text-xl text-gray-300 max-w-3xl">
+            Discover how Home Swerv makes it easy to find reliable service providers, manage your home projects, and maintain your most valuable asset.
           </p>
-          <Link
-            to="/register"
-            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 sm:w-auto"
-          >
-            Sign up for free
-          </Link>
+          <div className="mt-10">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Features</h2>
+            <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
+              Designed for Homeowners
+            </p>
+            <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+              Our platform offers everything you need to manage your home services with ease.
+            </p>
+          </div>
+
+          <div className="mt-16">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      {feature.icon}
+                    </div>
+                    <h3 className="mt-4 text-lg font-medium text-gray-900">{feature.name}</h3>
+                    <p className="mt-2 text-base text-gray-500">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* How It Works Section */}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">How It Works</h2>
+            <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
+              Simple Process, Exceptional Results
+            </p>
+            <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+              Finding and hiring service providers has never been easier.
+            </p>
+          </div>
+
+          <div className="mt-16">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-gray-50 text-lg font-medium text-gray-900">
+                  Follow these steps
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-8 max-w-3xl mx-auto">
+              <div className="space-y-8">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      <span className="text-lg font-bold">1</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Create Your Project</h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Describe your project, including what you need done, when you need it, and any specific requirements. Add photos to help providers understand the scope of work.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      <span className="text-lg font-bold">2</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Receive and Compare Quotes</h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Qualified service providers in your area will submit quotes for your project. Review their profiles, ratings, and previous work to find the right match.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      <span className="text-lg font-bold">3</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Hire and Schedule</h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Select the provider that best meets your needs and schedule the service. Communicate directly through our messaging system to finalize details.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      <span className="text-lg font-bold">4</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Pay Securely</h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Once the work is completed to your satisfaction, approve the payment through our secure platform. Your payment is protected until you confirm the job is done right.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                      <span className="text-lg font-bold">5</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Review and Track</h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Leave a review to help other homeowners and keep a record of the service in your home maintenance history for future reference.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits Section */}
+      <div className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Benefits</h2>
+            <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
+              Why Homeowners Love Home Swerv
+            </p>
+            <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+              Our platform offers unique advantages that make home services easier and more reliable.
+            </p>
+          </div>
+
+          <div className="mt-16">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="text-center">
+                  <div className="flex items-center justify-center h-16 w-16 rounded-md bg-blue-100 text-blue-600 mx-auto">
+                    {benefit.icon}
+                  </div>
+                  <h3 className="mt-4 text-xl font-medium text-gray-900">{benefit.title}</h3>
+                  <p className="mt-2 text-base text-gray-500">{benefit.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Testimonials Section */}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Testimonials</h2>
+            <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
+              Hear from Our Homeowners
+            </p>
+            <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+              Real stories from homeowners who have transformed their home service experience with Home Swerv.
+            </p>
+          </div>
+
+          <div className="mt-16">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="p-6">
+                    <p className="text-base text-gray-500 italic">"{testimonial.content}"</p>
+                    <div className="mt-6 flex items-center">
+                      <div className="flex-shrink-0">
+                        <img
+                          className="h-12 w-12 rounded-full object-cover"
+                          src={testimonial.image}
+                          alt={testimonial.author}
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-medium text-gray-900">{testimonial.author}</h3>
+                        <p className="text-sm text-gray-500">{testimonial.location}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-blue-700">
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <span className="block">Ready to transform your home service experience?</span>
+            <span className="block text-blue-200">Join thousands of satisfied homeowners today.</span>
+          </h2>
+          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+            <div className="inline-flex rounded-md shadow">
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50"
+              >
+                Get Started
+              </Link>
+            </div>
+            <div className="ml-3 inline-flex rounded-md shadow">
+              <Link
+                to="/features"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 hover:bg-blue-900"
+              >
+                Learn More
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
