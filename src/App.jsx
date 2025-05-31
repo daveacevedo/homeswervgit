@@ -22,6 +22,7 @@ import Testimonials from './pages/public/Testimonials';
 import HomeownerFeatures from './pages/public/HomeownerFeatures';
 import ProviderFeatures from './pages/public/ProviderFeatures';
 import SiteMap from './pages/public/SiteMap';
+import RealEstateMarketplace from './pages/public/RealEstateMarketplace';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -78,6 +79,7 @@ function App() {
                     <Route path="/features/testimonials" element={<Testimonials />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/site-map" element={<SiteMap />} />
+                    <Route path="/real-estate" element={<RealEstateMarketplace />} />
                   </Route>
 
                   {/* Auth Routes */}

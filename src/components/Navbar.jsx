@@ -24,6 +24,7 @@ const Navbar = () => {
     { name: 'Home', href: '/', current: false },
     { name: 'About', href: '/about', current: false },
     { name: 'Pricing', href: '/pricing', current: false },
+    { name: 'For Sale', href: '/real-estate', current: false }, // Added "For Sale" navigation item
     { name: 'Contact', href: '/contact', current: false },
   ];
 
