@@ -2,28 +2,95 @@ import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-export default function Users() {
+export default function Content() {
   const { hasPermission } = useAdmin();
-  const [users, setUsers] = useState([]);
+  const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
 
   // Mock data for demonstration
-  const mockUsers = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', lastLogin: '2023-10-15T14:30:00Z' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Super Admin', status: 'Active', lastLogin: '2023-10-14T09:15:00Z' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Editor', status: 'Inactive', lastLogin: '2023-09-30T11:45:00Z' },
-    { id: 4, name: 'Alice Williams', email: 'alice@example.com', role: 'Viewer', status: 'Active', lastLogin: '2023-10-12T16:20:00Z' },
-    { id: 5, name: 'Charlie Brown', email: 'charlie@example.com', role: 'Editor', status: 'Active', lastLogin: '2023-10-10T13:10:00Z' },
+  const mockPages = [
+    { 
+      id: 1, 
+      title: 'Home Page', 
+      slug: '/', 
+      type: 'Landing Page', 
+      lastUpdated: '2023-10-10T15:30:00Z',
+      status: 'Published',
+      author: 'Admin'
+    },
+    { 
+      id: 2, 
+      title: 'About Us', 
+      slug: '/about', 
+      type: 'Content Page', 
+      lastUpdated: '2023-09-25T11:45:00Z',
+      status: 'Published',
+      author: 'Content Editor'
+    },
+    { 
+      id: 3, 
+      title: 'Services', 
+      slug: '/services', 
+      type: 'Content Page', 
+      lastUpdated: '2023-10-05T09:20:00Z',
+      status: 'Published',
+      author: 'Admin'
+    },
+    { 
+      id: 4, 
+      title: 'Privacy Policy', 
+      slug: '/privacy-policy', 
+      type: 'Legal Page', 
+      lastUpdated: '2023-08-15T14:10:00Z',
+      status: 'Published',
+      author: 'Legal Team'
+    },
+    { 
+      id: 5, 
+      title: 'Terms of Service', 
+      slug: '/terms-of-service', 
+      type: 'Legal Page', 
+      lastUpdated: '2023-08-15T14:30:00Z',
+      status: 'Published',
+      author: 'Legal Team'
+    },
+    { 
+      id: 6, 
+      title: 'Upcoming Features', 
+      slug: '/upcoming-features', 
+      type: 'Content Page', 
+      lastUpdated: '2023-10-12T10:15:00Z',
+      status: 'Draft',
+      author: 'Content Editor'
+    },
+    { 
+      id: 7, 
+      title: 'FAQ', 
+      slug: '/faq', 
+      type: 'Content Page', 
+      lastUpdated: '2023-09-30T16:45:00Z',
+      status: 'Published',
+      author: 'Support Team'
+    },
+    { 
+      id: 8, 
+      title: 'Contact Us', 
+      slug: '/contact', 
+      type: 'Contact Page', 
+      lastUpdated: '2023-10-01T13:20:00Z',
+      status: 'Published',
+      author: 'Admin'
+    },
   ];
 
-  const roles = ['all', 'Super Admin', 'Admin', 'Editor', 'Viewer'];
+  const pageTypes = ['all', 'Landing Page', 'Content Page', 'Legal Page', 'Contact Page'];
 
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
-      setUsers(mockUsers);
+      setPages(mockPages);
       setLoading(false);
     }, 1000);
   }, []);
@@ -39,26 +106,26 @@ export default function Users() {
     }).format(date);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-    return matchesSearch && matchesRole;
+  const filteredPages = pages.filter(page => {
+    const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         page.slug.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === 'all' || page.type === selectedType;
+    return matchesSearch && matchesType;
   });
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">User Management</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Content Management</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage admin users and their permissions
+          Manage website content and pages
         </p>
       </div>
       
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="w-full sm:w-64">
           <label htmlFor="search" className="sr-only">
-            Search users
+            Search pages
           </label>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -70,7 +137,7 @@ export default function Users() {
               id="search"
               name="search"
               className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-              placeholder="Search users"
+              placeholder="Search pages"
               type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -80,15 +147,15 @@ export default function Users() {
         
         <div className="w-full sm:w-48">
           <select
-            id="role"
-            name="role"
+            id="type"
+            name="type"
             className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600 sm:text-sm sm:leading-6"
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
           >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role === 'all' ? 'All Roles' : role}
+            {pageTypes.map((type) => (
+              <option key={type} value={type}>
+                {type === 'all' ? 'All Types' : type}
               </option>
             ))}
           </select>
@@ -99,7 +166,7 @@ export default function Users() {
             type="button"
             className="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
           >
-            Add User
+            Create Page
           </button>
         </div>
       </div>
@@ -117,19 +184,19 @@ export default function Users() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                        Name
+                        Title
                       </th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Email
+                        URL
                       </th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Role
+                        Type
                       </th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                         Status
                       </th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Last Login
+                        Last Updated
                       </th>
                       <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                         <span className="sr-only">Actions</span>
@@ -137,36 +204,26 @@ export default function Users() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {filteredUsers.map((user) => (
-                      <tr key={user.id}>
+                    {filteredPages.map((page) => (
+                      <tr key={page.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                          {user.name}
+                          {page.title}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                            user.role === 'Super Admin' 
-                              ? 'bg-purple-100 text-purple-700' 
-                              : user.role === 'Admin'
-                              ? 'bg-blue-100 text-blue-700'
-                              : user.role === 'Editor'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {user.role}
-                          </span>
+                          <code className="text-xs bg-gray-100 px-2 py-1 rounded">{page.slug}</code>
                         </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{page.type}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            user.status === 'Active' 
+                            page.status === 'Published' 
                               ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {user.status}
+                            {page.status}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {formatDate(user.lastLogin)}
+                          {formatDate(page.lastUpdated)}
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           <button
@@ -177,9 +234,9 @@ export default function Users() {
                           </button>
                           <button
                             type="button"
-                            className="text-red-600 hover:text-red-900"
+                            className="text-gray-600 hover:text-gray-900"
                           >
-                            Delete
+                            Preview
                           </button>
                         </td>
                       </tr>

@@ -1,22 +1,33 @@
+import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdmin } from '../../contexts/AdminContext';
+import AdminLayout from '../../layouts/AdminLayout';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-function AdminRoute() {
+export default function AdminRoute() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   
-  const loading = authLoading || adminLoading;
-  
-  if (loading) {
+  // Show loading spinner while checking authentication and admin status
+  if (authLoading || adminLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="large" />
       </div>
     );
   }
   
-  return user && isAdmin ? <Outlet /> : <Navigate to="/login" />;
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Redirect to home if authenticated but not an admin
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // Render admin layout with outlet for nested routes
+  return <AdminLayout />;
 }
-
-export default AdminRoute;

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const VisionBoardItem = ({ item, categories, onEdit, onDelete, isDemo = false }) => {
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const navigate = useNavigate();
   
   // Find the category object that matches the item's category
   const category = categories.find(cat => cat.id === item.category) || categories.find(cat => cat.id === 'other');
@@ -38,8 +39,8 @@ const VisionBoardItem = ({ item, categories, onEdit, onDelete, isDemo = false })
 
   const handleCreateProject = () => {
     setShowProjectModal(false);
-    // Navigate to project creation with vision board data
-    window.location.href = `/homeowner/projects/new?from=visionboard&id=${item.id}`;
+    // Navigate to project creation with vision board data using React Router
+    navigate(`/homeowner/projects/new?from=visionboard&id=${item.id}`);
   };
 
   return (

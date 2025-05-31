@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabaseClient';
+import { useAuth } from './AuthContext';
 
 const AdminContext = createContext();
 
@@ -10,81 +10,119 @@ export function useAdmin() {
 
 export function AdminProvider({ children }) {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [adminRole, setAdminRole] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch admin role and permissions when user changes
   useEffect(() => {
-    if (!user) {
-      setAdminRole(null);
-      setPermissions([]);
-      setLoading(false);
-      return;
-    }
+    async function checkAdminStatus() {
+      if (!user) {
+        setIsAdmin(false);
+        setAdminRole(null);
+        setPermissions([]);
+        setLoading(false);
+        return;
+      }
 
-    const fetchAdminRole = async () => {
       try {
         setLoading(true);
         
-        // Check if user has an admin role
-        const { data: adminData, error: adminError } = await supabase
+        // Check if user is an admin
+        const { data: adminUser, error: adminError } = await supabase
           .from('admin_users')
-          .select('role')
-          .eq('user_id', user.id)
+          .select('*, admin_roles(*)')
+          .eq('id', user.id)
           .single();
-
+        
         if (adminError && adminError.code !== 'PGRST116') {
           throw adminError;
         }
-
-        if (!adminData) {
+        
+        if (!adminUser) {
+          setIsAdmin(false);
           setAdminRole(null);
           setPermissions([]);
+          setLoading(false);
           return;
         }
-
-        setAdminRole(adminData.role);
         
-        // Fetch permissions for this role
+        setIsAdmin(true);
+        setAdminRole(adminUser.admin_roles);
+        
+        // Fetch permissions for this admin
         const { data: permissionsData, error: permissionsError } = await supabase
           .from('admin_role_permissions')
-          .select('permission_category, permission_name')
-          .eq('role', adminData.role);
-          
-        if (permissionsError) throw permissionsError;
+          .select(`
+            admin_permissions(
+              id,
+              resource,
+              action,
+              description
+            )
+          `)
+          .eq('role_id', adminUser.role_id);
         
-        setPermissions(permissionsData || []);
+        if (permissionsError) {
+          throw permissionsError;
+        }
+        
+        // Extract permissions from the nested structure
+        const extractedPermissions = permissionsData.map(item => item.admin_permissions);
+        setPermissions(extractedPermissions);
+        
       } catch (error) {
-        console.error('Error fetching admin data:', error.message);
+        console.error('Error checking admin status:', error);
         setError(error.message);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchAdminRole();
+    }
+    
+    checkAdminStatus();
   }, [user]);
 
   // Check if user has a specific permission
-  const hasPermission = (category, name) => {
-    if (!adminRole) return false;
+  const hasPermission = (resource, action) => {
+    if (!isAdmin) return false;
     
-    // Super admin has all permissions
-    if (adminRole === 'super_admin') return true;
+    // Super admins have all permissions
+    if (adminRole?.name === 'Super Admin') return true;
     
+    // Check specific permission
     return permissions.some(
-      p => p.permission_category === category && p.permission_name === name
+      permission => permission.resource === resource && permission.action === action
     );
   };
 
+  // Log admin action for audit trail
+  const logAdminAction = async (action, entityType, entityId, details = {}) => {
+    if (!user || !isAdmin) return;
+    
+    try {
+      await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: user.id,
+          action,
+          entity_type: entityType,
+          entity_id: entityId,
+          details
+        });
+    } catch (error) {
+      console.error('Error logging admin action:', error);
+    }
+  };
+
   const value = {
+    isAdmin,
     adminRole,
     permissions,
     loading,
     error,
     hasPermission,
+    logAdminAction
   };
 
   return (
