@@ -1,101 +1,192 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useApp } from '../../contexts/AppContext';
 
 const UserTypeSelection = () => {
+  const { userRoles, addUserRole, setActiveRole } = useApp();
+  const [selectedRole, setSelectedRole] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { user, updateUserProfile } = useAuth();
-  
-  const selectHomeowner = async () => {
+
+  const roleOptions = [
+    { id: 'homeowner', name: 'Homeowner', description: 'Find trusted professionals for your home projects', icon: '🏠' },
+    { id: 'provider', name: 'Service Provider', description: 'Offer your services to homeowners', icon: '🔧' }
+  ];
+
+  // Filter out roles the user already has
+  const availableRoles = roleOptions.filter(role => !userRoles.includes(role.id));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedRole) {
+      setError('Please select a role to continue');
+      return;
+    }
+
     try {
-      // Update user profile with user type
-      await updateUserProfile({
-        userType: 'homeowner'
-      });
+      setLoading(true);
+      setError('');
       
-      // Navigate to homeowner profile setup
-      navigate('/homeowner-profile-setup');
+      // Add the new role to the user
+      await addUserRole(selectedRole);
+      
+      // Set the new role as active
+      setActiveRole(selectedRole);
+      
+      // Redirect to the appropriate dashboard
+      if (selectedRole === 'homeowner') {
+        navigate('/homeowner/dashboard');
+      } else if (selectedRole === 'provider') {
+        navigate('/provider/dashboard');
+      }
     } catch (error) {
-      console.error('Error setting user type:', error);
+      setError('An error occurred. Please try again.');
+      console.error('Error adding role:', error);
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const selectProvider = async () => {
-    try {
-      // Update user profile with user type
-      await updateUserProfile({
-        userType: 'provider'
-      });
-      
-      // Navigate to provider profile setup
-      navigate('/provider-profile-setup');
-    } catch (error) {
-      console.error('Error setting user type:', error);
+
+  // If user already has roles, show option to switch between them
+  const handleSwitchRole = (role) => {
+    setActiveRole(role);
+    
+    if (role === 'homeowner') {
+      navigate('/homeowner/dashboard');
+    } else if (role === 'provider') {
+      navigate('/provider/dashboard');
+    } else if (role === 'admin') {
+      navigate('/admin/dashboard');
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <img
-          className="mx-auto h-12 w-auto"
-          src="https://tailwindui.com/img/logos/workflow-mark-blue-600.svg"
-          alt="Home Swerv"
-        />
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Choose your account type
+    <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-extrabold text-gray-900">
+          {userRoles.length > 0 ? 'Choose Your Role' : 'Select Your Account Type'}
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Select how you want to use Home Swerv
+        <p className="mt-2 text-sm text-gray-600">
+          {userRoles.length > 0 
+            ? 'You can add a new role or switch to an existing one' 
+            : 'Select how you want to use Home Swerv'}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <div className="space-y-6">
-            <div 
-              onClick={selectHomeowner}
-              className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <div className="flex justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <span className="mt-2 block text-lg font-medium text-gray-900">
-                I'm a Homeowner
-              </span>
-              <p className="mt-1 text-sm text-gray-500">
-                Find trusted service providers for your home projects and maintenance needs.
-              </p>
+      {error && (
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
             </div>
-            
-            <div 
-              onClick={selectProvider}
-              className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <div className="flex justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="mt-2 block text-lg font-medium text-gray-900">
-                I'm a Service Provider
-              </span>
-              <p className="mt-1 text-sm text-gray-500">
-                Connect with homeowners and grow your business with new clients.
-              </p>
-            </div>
-            
-            <div className="text-sm text-center mt-6">
-              <p className="text-gray-500">
-                You can always add another account type later from your profile settings.
-              </p>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Existing roles section */}
+      {userRoles.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-medium text-gray-900">Your Existing Roles</h3>
+          <div className="mt-4 grid grid-cols-1 gap-4">
+            {userRoles.map((role) => (
+              <button
+                key={role}
+                onClick={() => handleSwitchRole(role)}
+                className="relative block w-full rounded-lg border border-gray-300 bg-white p-6 text-left shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 text-2xl">
+                    {role === 'homeowner' ? '🏠' : role === 'provider' ? '🔧' : role === 'admin' ? '👑' : '👤'}
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-base font-medium text-gray-900">
+                      {role === 'homeowner' ? 'Homeowner' : role === 'provider' ? 'Service Provider' : role === 'admin' ? 'Administrator' : role}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {role === 'homeowner' 
+                        ? 'Find and hire service providers' 
+                        : role === 'provider' 
+                        ? 'Offer your services to homeowners' 
+                        : role === 'admin' 
+                        ? 'Manage the platform and users' 
+                        : 'Access your account'}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* New role selection section */}
+      {availableRoles.length > 0 && (
+        <form onSubmit={handleSubmit} className="mt-8">
+          <h3 className="text-lg font-medium text-gray-900">
+            {userRoles.length > 0 ? 'Add a New Role' : 'Choose Your Role'}
+          </h3>
+          <div className="mt-4 space-y-4">
+            {availableRoles.map((role) => (
+              <div key={role.id} className="relative">
+                <input
+                  id={role.id}
+                  name="role"
+                  type="radio"
+                  value={role.id}
+                  checked={selectedRole === role.id}
+                  onChange={() => setSelectedRole(role.id)}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor={role.id}
+                  className={`relative block rounded-lg border ${
+                    selectedRole === role.id ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'
+                  } bg-white p-6 text-left shadow-sm cursor-pointer hover:border-gray-400 focus:outline-none`}
+                >
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 text-2xl">{role.icon}</div>
+                    <div className="ml-4">
+                      <p className="text-base font-medium text-gray-900">{role.name}</p>
+                      <p className="text-sm text-gray-500">{role.description}</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            <button
+              type="submit"
+              disabled={loading || !selectedRole}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                loading || !selectedRole ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : userRoles.length > 0 ? (
+                'Add Role'
+              ) : (
+                'Continue'
+              )}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

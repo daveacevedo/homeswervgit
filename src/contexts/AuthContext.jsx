@@ -1,112 +1,242 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
-        }
-        
-        setSession(session);
-        setUser(session?.user || null);
-      } catch (error) {
-        console.error('Error getting initial session:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    getInitialSession();
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    // Check active session and set the user
+    const session = supabase.auth.getSession();
+    setUser(session?.user || null);
+    setLoading(false);
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
         setUser(session?.user || null);
         setLoading(false);
       }
     );
-    
-    // Cleanup subscription on unmount
+
     return () => {
-      subscription?.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
   }, []);
 
-  // Sign up with email and password
+  // Sign up function
   const signUp = async (email, password) => {
-    return await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Sign in with email and password
+  // Sign in function
   const signIn = async (email, password) => {
-    return await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Sign in with Google
-  const signInWithGoogle = async () => {
-    return await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
-  };
-
-  // Sign out
+  // Sign out function
   const signOut = async () => {
-    return await supabase.auth.signOut();
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Reset password
+  // Reset password function
   const resetPassword = async (email) => {
-    return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Update password
-  const updatePassword = async (newPassword) => {
-    return await supabase.auth.updateUser({
-      password: newPassword,
-    });
+  // Update password function
+  const updatePassword = async (password) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create test users function (for development only)
+  const createTestUsers = async () => {
+    try {
+      // Create admin user
+      const adminEmail = 'admin@example.com';
+      const adminPassword = 'password123';
+      
+      const { data: adminData, error: adminError } = await supabase.auth.signUp({
+        email: adminEmail,
+        password: adminPassword,
+      });
+      
+      if (adminError) throw adminError;
+      
+      // Add admin role
+      if (adminData?.user) {
+        await supabase
+          .from('user_roles')
+          .insert([
+            { user_id: adminData.user.id, role: 'admin', is_primary: true }
+          ]);
+      }
+      
+      // Create homeowner user
+      const homeownerEmail = 'homeowner@example.com';
+      const homeownerPassword = 'password123';
+      
+      const { data: homeownerData, error: homeownerError } = await supabase.auth.signUp({
+        email: homeownerEmail,
+        password: homeownerPassword,
+      });
+      
+      if (homeownerError) throw homeownerError;
+      
+      // Add homeowner role
+      if (homeownerData?.user) {
+        await supabase
+          .from('user_roles')
+          .insert([
+            { user_id: homeownerData.user.id, role: 'homeowner', is_primary: true }
+          ]);
+      }
+      
+      // Create provider user
+      const providerEmail = 'provider@example.com';
+      const providerPassword = 'password123';
+      
+      const { data: providerData, error: providerError } = await supabase.auth.signUp({
+        email: providerEmail,
+        password: providerPassword,
+      });
+      
+      if (providerError) throw providerError;
+      
+      // Add provider role
+      if (providerData?.user) {
+        await supabase
+          .from('user_roles')
+          .insert([
+            { user_id: providerData.user.id, role: 'provider', is_primary: true }
+          ]);
+      }
+      
+      // Create multi-role user
+      const multiRoleEmail = 'multirole@example.com';
+      const multiRolePassword = 'password123';
+      
+      const { data: multiRoleData, error: multiRoleError } = await supabase.auth.signUp({
+        email: multiRoleEmail,
+        password: multiRolePassword,
+      });
+      
+      if (multiRoleError) throw multiRoleError;
+      
+      // Add multiple roles
+      if (multiRoleData?.user) {
+        await supabase
+          .from('user_roles')
+          .insert([
+            { user_id: multiRoleData.user.id, role: 'homeowner', is_primary: true },
+            { user_id: multiRoleData.user.id, role: 'provider', is_primary: false }
+          ]);
+      }
+      
+      return {
+        admin: { email: adminEmail, password: adminPassword },
+        homeowner: { email: homeownerEmail, password: homeownerPassword },
+        provider: { email: providerEmail, password: providerPassword },
+        multiRole: { email: multiRoleEmail, password: multiRolePassword }
+      };
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
   };
 
   const value = {
     user,
-    session,
     loading,
+    error,
     signUp,
     signIn,
-    signInWithGoogle,
     signOut,
     resetPassword,
     updatePassword,
+    createTestUsers
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
 }

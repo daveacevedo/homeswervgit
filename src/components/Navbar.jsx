@@ -19,12 +19,12 @@ const Navbar = () => {
   // Get the role from userProfile instead of activeRole
   const activeRole = userProfile?.role || 'homeowner';
 
-  // Navigation items based on authentication and role
+  // Navigation items based on authentication and role - updated order as requested
   const navigation = [
-    { name: 'Home', href: '/', current: false },
-    { name: 'About', href: '/about', current: false },
+    { name: 'Features', href: '/features', current: false },
     { name: 'Pricing', href: '/pricing', current: false },
-    { name: 'For Sale', href: '/real-estate', current: false }, // Added "For Sale" navigation item
+    { name: 'For Sale', href: '/real-estate', current: false },
+    { name: 'About', href: '/about', current: false },
     { name: 'Contact', href: '/contact', current: false },
   ];
 
@@ -118,51 +118,6 @@ const Navbar = () => {
                         {item.name}
                       </Link>
                     ))}
-                    
-                    {/* Features dropdown - visible in desktop view */}
-                    <div className="relative" ref={featuresRef}>
-                      <button
-                        onClick={() => setFeaturesOpen(!featuresOpen)}
-                        className="text-gray-500 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
-                        aria-expanded={featuresOpen}
-                      >
-                        Features
-                        <ChevronDownIcon 
-                          className="ml-1 h-4 w-4 transition-transform duration-200" 
-                          aria-hidden="true" 
-                        />
-                      </button>
-                      
-                      {/* Features dropdown menu */}
-                      {featuresOpen && (
-                        <div className="absolute z-50 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          <div className="py-1">
-                            {featuresItems.map((item) => (
-                              <Link
-                                key={item.name}
-                                to={item.href}
-                                className="group flex items-start px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                                onClick={() => setFeaturesOpen(false)}
-                              >
-                                <div>
-                                  <p className="font-medium text-gray-900">{item.name}</p>
-                                  <p className="mt-1 text-xs text-gray-500">{item.description}</p>
-                                </div>
-                              </Link>
-                            ))}
-                            <div className="px-4 py-3 border-t border-gray-100">
-                              <Link
-                                to="/sitemap"
-                                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                                onClick={() => setFeaturesOpen(false)}
-                              >
-                                View Full Site Map →
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>

@@ -116,6 +116,11 @@ const Footer = () => {
                   Terms of Service
                 </a>
               </li>
+              <li>
+                <Link to="/admin/dashboard" className="text-base text-gray-300 hover:text-white">
+                  Admin Dashboard
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

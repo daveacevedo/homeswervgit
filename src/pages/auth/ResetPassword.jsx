@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../utils/supabaseClient';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -8,15 +9,47 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
   
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract token from URL if present
+  // Extract token from URL hash if present
   useEffect(() => {
-    // This would typically extract the token from the URL
-    // For Supabase, this is usually handled automatically
+    const hashParams = new URLSearchParams(
+      location.hash.substring(1) // remove the # character
+    );
+    
+    const token = hashParams.get('access_token');
+    if (token) {
+      setAccessToken(token);
+      
+      // Set the access token in the Supabase client
+      const setSession = async () => {
+        const { error } = await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: hashParams.get('refresh_token') || '',
+        });
+        
+        if (error) {
+          console.error('Error setting session:', error);
+          setError('Invalid or expired reset link. Please request a new password reset.');
+        }
+      };
+      
+      setSession();
+    } else {
+      // Check if user is authenticated
+      const checkSession = async () => {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          setError('No active session. Please request a new password reset link.');
+        }
+      };
+      
+      checkSession();
+    }
   }, [location]);
 
   const handleSubmit = async (e) => {
@@ -41,7 +74,11 @@ const ResetPassword = () => {
       setMessage('');
       setError('');
       setLoading(true);
-      await updatePassword(password);
+      
+      const { error } = await updatePassword(password);
+      
+      if (error) throw error;
+      
       setMessage('Password has been reset successfully');
       
       // Redirect to login after a short delay

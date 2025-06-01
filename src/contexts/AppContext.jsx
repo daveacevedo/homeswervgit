@@ -4,56 +4,61 @@ import { supabase } from '../utils/supabaseClient';
 
 const AppContext = createContext();
 
-export function useApp() {
-  return useContext(AppContext);
-}
-
 export function AppProvider({ children }) {
-  const { user } = useAuth() || { user: null };
+  const { user } = useAuth();
   const [activeRole, setActiveRole] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Check what roles the user has
+  // Fetch user roles when user changes
   useEffect(() => {
-    if (!user) {
-      setUserRoles([]);
-      setLoading(false);
-      return;
-    }
-
     const fetchUserRoles = async () => {
+      if (!user) {
+        setUserRoles([]);
+        setActiveRole(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         
-        // Check if user has a homeowner profile
-        const { data: homeownerData, error: homeownerError } = await supabase
-          .from('homeowner_profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
+        // Fetch roles from the database
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', user.id);
         
-        // Check if user has a provider profile
-        const { data: providerData, error: providerError } = await supabase
-          .from('provider_profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-        
-        const roles = [];
-        if (homeownerData) roles.push('homeowner');
-        if (providerData) roles.push('provider');
-        
-        setUserRoles(roles);
-        
-        // If user has only one role, set it as active
-        if (roles.length === 1 && !activeRole) {
-          setActiveRole(roles[0]);
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          // Extract role names
+          const roles = data.map(item => item.role);
+          setUserRoles(roles);
+          
+          // Find primary role or use the first one
+          const primaryRole = data.find(item => item.is_primary);
+          if (primaryRole) {
+            setActiveRole(primaryRole.role);
+          } else {
+            setActiveRole(roles[0]);
+          }
+        } else {
+          // If no roles found, set default role
+          setUserRoles(['homeowner']);
+          setActiveRole('homeowner');
+          
+          // Create default role in database
+          await supabase
+            .from('user_roles')
+            .insert([
+              { user_id: user.id, role: 'homeowner', is_primary: true }
+            ]);
         }
       } catch (error) {
-        console.error('Error fetching user roles:', error.message);
+        console.error('Error fetching user roles:', error);
       } finally {
         setLoading(false);
       }
@@ -62,87 +67,113 @@ export function AppProvider({ children }) {
     fetchUserRoles();
   }, [user]);
 
-  // Determine active role based on URL path
+  // Update primary role when active role changes
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path.startsWith('/homeowner')) {
-      setActiveRole('homeowner');
-    } else if (path.startsWith('/provider')) {
-      setActiveRole('provider');
-    } else if (userRoles.length === 1) {
-      // Default to the only role if no specific path is matched
-      setActiveRole(userRoles[0]);
-    }
-  }, [window.location.pathname, userRoles]);
+    const updatePrimaryRole = async () => {
+      if (!user || !activeRole) return;
 
-  // Fetch user profile based on active role
-  useEffect(() => {
-    if (!user || !activeRole) {
-      setUserProfile(null);
-      return;
-    }
-
-    const fetchUserProfile = async () => {
       try {
-        setLoading(true);
-        let profileTable;
+        // First, set all roles to not primary
+        await supabase
+          .from('user_roles')
+          .update({ is_primary: false })
+          .eq('user_id', user.id);
         
-        if (activeRole === 'homeowner') {
-          profileTable = 'homeowner_profiles';
-        } else if (activeRole === 'provider') {
-          profileTable = 'provider_profiles';
-        } else {
-          throw new Error('Invalid role');
-        }
-
-        const { data, error } = await supabase
-          .from(profileTable)
-          .select('*')
+        // Then set the active role as primary
+        await supabase
+          .from('user_roles')
+          .update({ is_primary: true })
           .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        
-        setUserProfile(data);
+          .eq('role', activeRole);
       } catch (error) {
-        console.error(`Error fetching ${activeRole} profile:`, error.message);
-        setError(error.message);
-      } finally {
-        setLoading(false);
+        console.error('Error updating primary role:', error);
       }
     };
 
-    fetchUserProfile();
+    if (user && activeRole) {
+      updatePrimaryRole();
+    }
   }, [user, activeRole]);
 
-  // Switch between roles
-  const switchRole = (role) => {
-    if (role !== 'homeowner' && role !== 'provider') {
-      throw new Error('Invalid role');
+  // Function to add a new role to the user
+  const addUserRole = async (role) => {
+    if (!user) return;
+
+    try {
+      // Check if role already exists
+      if (userRoles.includes(role)) {
+        return;
+      }
+
+      // Add role to database
+      const { error } = await supabase
+        .from('user_roles')
+        .insert([
+          { user_id: user.id, role, is_primary: userRoles.length === 0 }
+        ]);
+      
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setUserRoles([...userRoles, role]);
+      
+      // If this is the first role, set it as active
+      if (userRoles.length === 0) {
+        setActiveRole(role);
+      }
+    } catch (error) {
+      console.error('Error adding user role:', error);
     }
-    
-    setActiveRole(role);
-    
-    // Redirect to the appropriate dashboard
-    if (role === 'homeowner') {
-      window.location.href = '/homeowner/dashboard';
-    } else {
-      window.location.href = '/provider/dashboard';
+  };
+
+  // Function to remove a role from the user
+  const removeUserRole = async (role) => {
+    if (!user) return;
+
+    try {
+      // Don't allow removing the last role
+      if (userRoles.length <= 1) {
+        return;
+      }
+
+      // Remove role from database
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('role', role);
+      
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      const updatedRoles = userRoles.filter(r => r !== role);
+      setUserRoles(updatedRoles);
+      
+      // If active role was removed, set a new active role
+      if (activeRole === role) {
+        setActiveRole(updatedRoles[0]);
+      }
+    } catch (error) {
+      console.error('Error removing user role:', error);
     }
   };
 
   const value = {
     activeRole,
-    userProfile,
-    loading,
-    error,
-    switchRole,
-    userRoles
+    setActiveRole,
+    userRoles,
+    addUserRole,
+    removeUserRole,
+    loading
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}
+
+export function useApp() {
+  return useContext(AppContext);
 }
