@@ -1,132 +1,86 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 const VisionBoard = () => {
-  const [activeCategory, setActiveCategory] = useState('all');
-
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'kitchen', name: 'Kitchen' },
-    { id: 'bathroom', name: 'Bathroom' },
-    { id: 'living', name: 'Living Room' },
-    { id: 'outdoor', name: 'Outdoor' },
-    { id: 'bedroom', name: 'Bedroom' }
-  ];
-
-  const inspirationItems = [
+  // Sample vision board items
+  const visionItems = [
     {
       id: 1,
       title: 'Modern Kitchen Renovation',
-      category: 'kitchen',
+      description: 'Open concept with island and high-end appliances',
       image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Clean lines, minimalist design, and high-end appliances create a sleek cooking space.'
+      category: 'Kitchen'
     },
     {
       id: 2,
-      title: 'Luxury Master Bathroom',
-      category: 'bathroom',
-      image: 'https://images.pexels.com/photos/1910472/pexels-photo-1910472.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Spa-like retreat with freestanding tub, walk-in shower, and elegant fixtures.'
+      title: 'Backyard Oasis',
+      description: 'Landscaped garden with water feature and outdoor kitchen',
+      image: 'https://images.pexels.com/photos/1643389/pexels-photo-1643389.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      category: 'Outdoor'
     },
     {
       id: 3,
-      title: 'Cozy Living Room Design',
-      category: 'living',
-      image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Comfortable seating, warm colors, and natural light create an inviting space.'
+      title: 'Spa-Like Bathroom',
+      description: 'Freestanding tub, walk-in shower, and double vanity',
+      image: 'https://images.pexels.com/photos/1910472/pexels-photo-1910472.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      category: 'Bathroom'
     },
     {
       id: 4,
-      title: 'Backyard Oasis',
-      category: 'outdoor',
-      image: 'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Landscaped garden with pool, outdoor kitchen, and comfortable seating areas.'
-    },
-    {
-      id: 5,
-      title: 'Farmhouse Kitchen',
-      category: 'kitchen',
-      image: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Rustic elements, open shelving, and a large island create a warm, inviting kitchen.'
-    },
-    {
-      id: 6,
-      title: 'Serene Bedroom Retreat',
-      category: 'bedroom',
-      image: 'https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      description: 'Calming colors, plush bedding, and minimal clutter for a peaceful sleep space.'
+      title: 'Home Office',
+      description: 'Functional workspace with built-in storage and natural light',
+      image: 'https://images.pexels.com/photos/1957477/pexels-photo-1957477.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      category: 'Office'
     }
   ];
 
-  const filteredItems = activeCategory === 'all' 
-    ? inspirationItems 
-    : inspirationItems.filter(item => item.category === activeCategory);
-
   return (
-    <div className="py-16 bg-white">
+    <div className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-base font-semibold text-blue-600 tracking-wide uppercase">Vision Board</h2>
+          <h2 className="text-base font-semibold text-primary-600 tracking-wide uppercase">Vision Board</h2>
           <p className="mt-1 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight">
-            Find Inspiration for Your Home
+            Visualize Your Dream Home
           </p>
           <p className="max-w-xl mt-5 mx-auto text-xl text-gray-500">
-            Browse our curated collection of home design ideas and save your favorites to your personal vision board.
+            Collect inspiration and turn your ideas into reality with our vision board tool.
           </p>
         </div>
 
-        {/* Category Filters */}
-        <div className="mt-8 flex justify-center">
-          <div className="inline-flex rounded-md shadow-sm">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                } ${
-                  category.id === categories[0].id
-                    ? 'rounded-l-md'
-                    : category.id === categories[categories.length - 1].id
-                    ? 'rounded-r-md'
-                    : ''
-                } border border-gray-300`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Inspiration Grid */}
-        <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item) => (
+        <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {visionItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="relative h-64">
+              <div className="relative h-48">
                 <img
+                  className="absolute inset-0 w-full h-full object-cover"
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover"
                 />
-                <div className="absolute top-0 right-0 p-2">
-                  <button className="bg-white rounded-full p-2 shadow hover:bg-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+                <div className="absolute top-0 right-0 m-2 px-2 py-1 bg-primary-600 rounded-full text-xs font-semibold text-white">
+                  {item.category}
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
-                <p className="mt-2 text-gray-600">{item.description}</p>
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {categories.find(cat => cat.id === item.category).name}
-                  </span>
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    View Details
+                <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-gray-500">{item.description}</p>
+                <div className="mt-4 flex justify-between">
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500"
+                  >
+                    Create Project
+                    <svg className="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </Link>
+                  <button
+                    type="button"
+                    className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                    </svg>
+                    <span className="sr-only">Save</span>
                   </button>
                 </div>
               </div>
@@ -134,11 +88,10 @@ const VisionBoard = () => {
           ))}
         </div>
 
-        {/* CTA */}
         <div className="mt-12 text-center">
           <Link
-            to="/homeowner/vision-board"
-            className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            to="/register"
+            className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
           >
             Create Your Vision Board
           </Link>

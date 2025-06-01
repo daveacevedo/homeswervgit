@@ -1,470 +1,604 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../utils/supabaseClient';
 import { 
-  StarIcon,
   MagnifyingGlassIcon,
+  FunnelIcon,
+  StarIcon,
   ChatBubbleLeftRightIcon,
-  PhoneIcon
+  MapPinIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  CheckBadgeIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
-const HomeownerProviders = () => {
+const categories = [
+  { id: 'all', name: 'All Categories' },
+  { id: 'plumbing', name: 'Plumbing' },
+  { id: 'electrical', name: 'Electrical' },
+  { id: 'hvac', name: 'HVAC' },
+  { id: 'roofing', name: 'Roofing' },
+  { id: 'landscaping', name: 'Landscaping' },
+  { id: 'painting', name: 'Painting' },
+  { id: 'cleaning', name: 'Cleaning' },
+  { id: 'renovation', name: 'Renovation' },
+  { id: 'carpentry', name: 'Carpentry' },
+  { id: 'flooring', name: 'Flooring' },
+  { id: 'pest_control', name: 'Pest Control' }
+];
+
+const Providers = () => {
+  const { user } = useAuth();
   const [providers, setProviders] = useState([]);
+  const [filteredProviders, setFilteredProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedService, setSelectedService] = useState('all');
-  const [selectedRating, setSelectedRating] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [ratingFilter, setRatingFilter] = useState('all');
+  const [savedProviders, setSavedProviders] = useState([]);
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'saved'
+  
   useEffect(() => {
-    fetchProviders();
-  }, []);
-
+    if (user) {
+      fetchProviders();
+      fetchSavedProviders();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+  
   const fetchProviders = async () => {
     try {
       setLoading(true);
       
-      // In a real app, you would fetch providers from your database
-      // For demo purposes, we'll use mock data
+      // In a real app, this would fetch from Supabase
+      // For now, we'll use mock data
+      const { data, error } = await supabase
+        .from('providers')
+        .select('*')
+        .order('name');
       
-      // Mock providers data
+      if (error) throw error;
+      
+      // If no data, use mock data
       const mockProviders = [
         {
-          id: 101,
-          name: 'Michael Brown',
-          company: 'Elite Home Renovations',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          rating: 4.9,
-          reviews: 27,
-          services: ['Kitchen Renovation', 'Bathroom Remodeling', 'Basement Finishing'],
-          description: 'Specializing in high-end home renovations with over 15 years of experience. Licensed and insured contractor with a focus on quality craftsmanship.',
-          location: 'Anytown, CA',
-          phone: '(555) 123-4567',
-          email: 'michael@elitehomerenovations.com',
-          website: 'www.elitehomerenovations.com',
-          projects_completed: 124
-        },
-        {
-          id: 102,
-          name: 'Jennifer Garcia',
-          company: 'Premium Bathroom Solutions',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/6585598/pexels-photo-6585598.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          id: 'prov-1',
+          name: 'Ace Plumbing & Remodeling',
+          category: 'plumbing',
           rating: 4.8,
-          reviews: 19,
-          services: ['Bathroom Remodeling', 'Plumbing', 'Tile Work'],
-          description: 'Bathroom renovation specialist with expertise in modern designs and water-efficient fixtures. Creating beautiful and functional bathrooms for over a decade.',
-          location: 'Somewhere, CA',
-          phone: '(555) 234-5678',
-          email: 'jennifer@premiumbathrooms.com',
-          website: 'www.premiumbathrooms.com',
-          projects_completed: 87
+          reviewCount: 124,
+          description: 'Professional plumbing services with over 20 years of experience. Specializing in repairs, installations, and bathroom remodeling.',
+          address: '123 Main St, Austin, TX 78701',
+          phone: '(512) 555-1234',
+          email: 'info@aceplumbing.com',
+          website: 'www.aceplumbing.com',
+          verified: true,
+          yearsInBusiness: 22,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/8961251/pexels-photo-8961251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Leak Detection & Repair',
+            'Pipe Installation & Replacement',
+            'Bathroom Remodeling',
+            'Water Heater Services',
+            'Drain Cleaning'
+          ],
+          availability: 'Mon-Fri: 8am-6pm, Sat: 9am-2pm'
         },
         {
-          id: 103,
-          name: 'David Lee',
-          company: 'Outdoor Living Experts',
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/5997993/pexels-photo-5997993.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          rating: 4.7,
-          reviews: 15,
-          services: ['Deck Building', 'Landscaping', 'Fence Installation'],
-          description: 'Transform your outdoor space with custom decks, professional landscaping, and quality fencing. Creating beautiful outdoor living areas that extend your home.',
-          location: 'Nowhere, CA',
-          phone: '(555) 345-6789',
-          email: 'david@outdoorlivingexperts.com',
-          website: 'www.outdoorlivingexperts.com',
-          projects_completed: 56
-        },
-        {
-          id: 104,
-          name: 'Sarah Johnson',
-          company: 'Perfect Painting Services',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/6444256/pexels-photo-6444256.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          rating: 4.9,
-          reviews: 32,
-          services: ['Interior Painting', 'Exterior Painting', 'Cabinet Refinishing'],
-          description: 'Professional painting services for interior and exterior projects. Attention to detail and premium materials for a flawless finish every time.',
-          location: 'Anytown, CA',
-          phone: '(555) 456-7890',
-          email: 'sarah@perfectpainting.com',
-          website: 'www.perfectpainting.com',
-          projects_completed: 215
-        },
-        {
-          id: 105,
-          name: 'Robert Martinez',
-          company: 'Martinez Electrical',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/257886/pexels-photo-257886.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          rating: 4.8,
-          reviews: 24,
-          services: ['Electrical Work', 'Lighting Installation', 'Home Automation'],
-          description: 'Licensed electrician providing safe and reliable electrical services. Specializing in modern lighting solutions and smart home technology integration.',
-          location: 'Somewhere, CA',
-          phone: '(555) 567-8901',
-          email: 'robert@martinezelectrical.com',
-          website: 'www.martinezelectrical.com',
-          projects_completed: 143
-        },
-        {
-          id: 106,
-          name: 'Lisa Anderson',
-          company: 'Green Thumb Landscaping',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/589/garden-grass-lawn-green.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          id: 'prov-2',
+          name: 'Green Thumb Landscaping',
+          category: 'landscaping',
           rating: 4.6,
-          reviews: 18,
-          services: ['Landscaping', 'Garden Design', 'Lawn Care'],
-          description: 'Creating beautiful and sustainable outdoor spaces. From complete landscape design to regular maintenance, we help you enjoy your yard year-round.',
-          location: 'Nowhere, CA',
-          phone: '(555) 678-9012',
-          email: 'lisa@greenthumblandscaping.com',
+          reviewCount: 89,
+          description: 'Complete landscaping services for residential and commercial properties. From lawn maintenance to custom landscape design.',
+          address: '456 Oak Dr, Austin, TX 78704',
+          phone: '(512) 555-5678',
+          email: 'contact@greenthumb.com',
           website: 'www.greenthumblandscaping.com',
-          projects_completed: 92
+          verified: true,
+          yearsInBusiness: 15,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/4503273/pexels-photo-4503273.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Lawn Maintenance',
+            'Landscape Design',
+            'Irrigation Systems',
+            'Tree & Shrub Care',
+            'Hardscaping'
+          ],
+          availability: 'Mon-Sat: 7am-5pm'
         },
         {
-          id: 107,
-          name: 'James Wilson',
-          company: 'Wilson Roofing & Siding',
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/5417837/pexels-photo-5417837.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          rating: 4.7,
-          reviews: 21,
-          services: ['Roofing', 'Siding', 'Gutter Installation'],
-          description: 'Protect your home with quality roofing and siding services. Experienced team providing durable solutions for all your exterior needs.',
-          location: 'Anytown, CA',
-          phone: '(555) 789-0123',
-          email: 'james@wilsonroofing.com',
-          website: 'www.wilsonroofing.com',
-          projects_completed: 178
-        },
-        {
-          id: 108,
-          name: 'Emily Davis',
-          company: 'Custom Cabinetry & Woodwork',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          cover: 'https://images.pexels.com/photos/5824883/pexels-photo-5824883.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          id: 'prov-3',
+          name: 'Bright Spark Electric',
+          category: 'electrical',
           rating: 4.9,
-          reviews: 16,
-          services: ['Custom Cabinets', 'Woodworking', 'Furniture Making'],
-          description: 'Master woodworker creating custom cabinetry, built-ins, and fine furniture. Bringing your vision to life with exceptional craftsmanship and attention to detail.',
-          location: 'Somewhere, CA',
-          phone: '(555) 890-1234',
-          email: 'emily@customcabinetry.com',
-          website: 'www.customcabinetry.com',
-          projects_completed: 64
+          reviewCount: 156,
+          description: 'Licensed electricians providing residential and commercial electrical services. From simple repairs to complete rewiring.',
+          address: '789 Elm St, Austin, TX 78745',
+          phone: '(512) 555-9012',
+          email: 'service@brightspark.com',
+          website: 'www.brightsparkelectric.com',
+          verified: true,
+          yearsInBusiness: 18,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/8961292/pexels-photo-8961292.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Electrical Repairs',
+            'Panel Upgrades',
+            'Lighting Installation',
+            'Ceiling Fan Installation',
+            'Electrical Inspections'
+          ],
+          availability: 'Mon-Fri: 8am-5pm, 24/7 Emergency Service'
+        },
+        {
+          id: 'prov-4',
+          name: 'Top Notch Roofing',
+          category: 'roofing',
+          rating: 4.7,
+          reviewCount: 112,
+          description: 'Quality roofing services including repairs, replacements, and inspections. Serving the Austin area for over 25 years.',
+          address: '321 Cedar Rd, Austin, TX 78702',
+          phone: '(512) 555-3456',
+          email: 'info@topnotchroofing.com',
+          website: 'www.topnotchroofing.com',
+          verified: true,
+          yearsInBusiness: 25,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/5417837/pexels-photo-5417837.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Roof Repairs',
+            'Roof Replacement',
+            'Roof Inspections',
+            'Gutter Installation',
+            'Storm Damage Repair'
+          ],
+          availability: 'Mon-Fri: 7am-6pm, Sat: 8am-2pm'
+        },
+        {
+          id: 'prov-5',
+          name: 'Cool Breeze HVAC',
+          category: 'hvac',
+          rating: 4.5,
+          reviewCount: 78,
+          description: 'Heating, ventilation, and air conditioning services for residential and commercial properties. Installation, repair, and maintenance.',
+          address: '567 Pine St, Austin, TX 78703',
+          phone: '(512) 555-7890',
+          email: 'service@coolbreeze.com',
+          website: 'www.coolbreezehvac.com',
+          verified: true,
+          yearsInBusiness: 12,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/4491881/pexels-photo-4491881.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'AC Installation & Repair',
+            'Heating System Services',
+            'Duct Cleaning',
+            'Preventative Maintenance',
+            'Indoor Air Quality Solutions'
+          ],
+          availability: 'Mon-Fri: 8am-5pm, 24/7 Emergency Service'
+        },
+        {
+          id: 'prov-6',
+          name: 'Fresh Coat Painters',
+          category: 'painting',
+          rating: 4.4,
+          reviewCount: 65,
+          description: 'Professional interior and exterior painting services for homes and businesses. Quality workmanship and attention to detail.',
+          address: '890 Maple Ave, Austin, TX 78722',
+          phone: '(512) 555-2345',
+          email: 'info@freshcoat.com',
+          website: 'www.freshcoatpainters.com',
+          verified: false,
+          yearsInBusiness: 8,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/6368836/pexels-photo-6368836.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Interior Painting',
+            'Exterior Painting',
+            'Cabinet Refinishing',
+            'Deck & Fence Staining',
+            'Color Consultation'
+          ],
+          availability: 'Mon-Sat: 8am-6pm'
+        },
+        {
+          id: 'prov-7',
+          name: 'Spotless Cleaning Services',
+          category: 'cleaning',
+          rating: 4.3,
+          reviewCount: 92,
+          description: 'Comprehensive cleaning services for homes and offices. Regular maintenance, deep cleaning, and move-in/move-out services.',
+          address: '432 Birch St, Austin, TX 78705',
+          phone: '(512) 555-6789',
+          email: 'schedule@spotlesscleaning.com',
+          website: 'www.spotlesscleaningservices.com',
+          verified: false,
+          yearsInBusiness: 6,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/4108715/pexels-photo-4108715.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Regular Maintenance Cleaning',
+            'Deep Cleaning',
+            'Move-In/Move-Out Cleaning',
+            'Post-Construction Cleaning',
+            'Window Cleaning'
+          ],
+          availability: 'Mon-Fri: 8am-5pm, Sat: 9am-3pm'
+        },
+        {
+          id: 'prov-8',
+          name: 'Master Carpentry',
+          category: 'carpentry',
+          rating: 4.8,
+          reviewCount: 47,
+          description: 'Custom carpentry and woodworking services. Specializing in built-ins, custom furniture, and finish carpentry.',
+          address: '765 Walnut Dr, Austin, TX 78723',
+          phone: '(512) 555-0123',
+          email: 'info@mastercarpentry.com',
+          website: 'www.mastercarpentry.com',
+          verified: true,
+          yearsInBusiness: 20,
+          licensedInsured: true,
+          image: 'https://images.pexels.com/photos/3637837/pexels-photo-3637837.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+          services: [
+            'Custom Cabinetry',
+            'Built-In Shelving',
+            'Finish Carpentry',
+            'Custom Furniture',
+            'Deck Construction'
+          ],
+          availability: 'Mon-Fri: 8am-5pm'
         }
       ];
       
-      setProviders(mockProviders);
+      const providersData = data && data.length > 0 ? data : mockProviders;
+      setProviders(providersData);
+      setFilteredProviders(providersData);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching providers:', error);
-    } finally {
       setLoading(false);
     }
   };
-
-  // Get all unique services
-  const allServices = [...new Set(providers.flatMap(provider => provider.services))].sort();
-
-  // Filter providers based on search term, selected service, and rating
-  const filteredProviders = providers.filter(provider => {
-    const matchesSearch = 
-      provider.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      provider.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      provider.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      provider.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesService = selectedService === 'all' || provider.services.includes(selectedService);
-    
-    const matchesRating = selectedRating === 'all' || 
-      (selectedRating === '5' && provider.rating >= 4.8) ||
-      (selectedRating === '4' && provider.rating >= 4.0 && provider.rating < 4.8) ||
-      (selectedRating === '3' && provider.rating >= 3.0 && provider.rating < 4.0);
-    
-    return matchesSearch && matchesService && matchesRating;
-  });
-
-  // Helper function to render stars for ratings
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <StarIcon
-            key={i}
-            className={`h-5 w-5 ${
-              i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'
-            } ${i === Math.floor(rating) && rating % 1 > 0 ? 'text-yellow-400' : ''}`}
-            aria-hidden="true"
-          />
-        ))}
-        <span className="ml-1 text-sm text-gray-500">{rating.toFixed(1)}</span>
-      </div>
-    );
+  
+  const fetchSavedProviders = async () => {
+    try {
+      // In a real app, this would fetch from Supabase
+      // For now, we'll use mock data
+      const { data, error } = await supabase
+        .from('saved_providers')
+        .select('provider_id')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // If no data, use mock data
+      const savedProviderIds = data && data.length > 0 
+        ? data.map(item => item.provider_id) 
+        : ['prov-1', 'prov-3']; // Mock saved providers
+      
+      setSavedProviders(savedProviderIds);
+    } catch (error) {
+      console.error('Error fetching saved providers:', error);
+    }
   };
-
+  
+  useEffect(() => {
+    // Filter providers based on search term, category, and rating
+    let filtered = providers;
+    
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(provider => 
+        provider.name.toLowerCase().includes(term) ||
+        provider.description.toLowerCase().includes(term) ||
+        provider.services.some(service => service.toLowerCase().includes(term))
+      );
+    }
+    
+    // Filter by category
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(provider => provider.category === categoryFilter);
+    }
+    
+    // Filter by rating
+    if (ratingFilter !== 'all') {
+      const minRating = parseFloat(ratingFilter);
+      filtered = filtered.filter(provider => provider.rating >= minRating);
+    }
+    
+    // Filter by saved status if in saved view
+    if (viewMode === 'saved') {
+      filtered = filtered.filter(provider => savedProviders.includes(provider.id));
+    }
+    
+    setFilteredProviders(filtered);
+  }, [searchTerm, categoryFilter, ratingFilter, providers, viewMode, savedProviders]);
+  
+  const toggleSaveProvider = async (providerId) => {
+    try {
+      const isSaved = savedProviders.includes(providerId);
+      
+      if (isSaved) {
+        // Remove from saved providers
+        await supabase
+          .from('saved_providers')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('provider_id', providerId);
+        
+        setSavedProviders(prev => prev.filter(id => id !== providerId));
+      } else {
+        // Add to saved providers
+        await supabase
+          .from('saved_providers')
+          .insert([
+            { user_id: user.id, provider_id: providerId }
+          ]);
+        
+        setSavedProviders(prev => [...prev, providerId]);
+      }
+    } catch (error) {
+      console.error('Error toggling saved provider:', error);
+    }
+  };
+  
+  const getCategoryName = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : categoryId;
+  };
+  
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
       </div>
     );
   }
-
+  
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Service Providers</h1>
+    <div>
+      <div className="md:flex md:items-center md:justify-between mb-8">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+            Service Providers
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Find and connect with trusted home service professionals
+          </p>
+        </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        {/* Filters and search */}
-        <div className="bg-white shadow rounded-lg p-6 mt-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <div>
-                  <label htmlFor="service" className="block text-sm font-medium text-gray-700">
-                    Filter by service
-                  </label>
-                  <select
-                    id="service"
-                    name="service"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                  >
-                    <option value="all">All Services</option>
-                    {allServices.map((service) => (
-                      <option key={service} value={service}>
-                        {service}
-                      </option>
-                    ))}
-                  </select>
+      
+      {/* Filters and Search */}
+      <div className="bg-white shadow sm:rounded-lg mb-6">
+        <div className="px-4 py-5 sm:p-6">
+          <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="flex-1">
+              <label htmlFor="search" className="sr-only">
+                Search providers
+              </label>
+              <div className="relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
-                <div>
-                  <label htmlFor="rating" className="block text-sm font-medium text-gray-700">
-                    Filter by rating
-                  </label>
-                  <select
-                    id="rating"
-                    name="rating"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                    value={selectedRating}
-                    onChange={(e) => setSelectedRating(e.target.value)}
-                  >
-                    <option value="all">All Ratings</option>
-                    <option value="5">4.8+ Stars</option>
-                    <option value="4">4.0+ Stars</option>
-                    <option value="3">3.0+ Stars</option>
-                  </select>
-                </div>
-              </div>
-              <div className="w-full md:w-64">
-                <label htmlFor="search" className="block text-sm font-medium text-gray-700">
-                  Search
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </div>
-                  <input
-                    type="text"
-                    name="search"
-                    id="search"
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
-                    placeholder="Search providers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 pl-10 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  placeholder="Search by name, service, or description"
+                />
               </div>
             </div>
-            <div className="flex justify-end">
-              <div className="flex border border-gray-300 rounded-md">
-                <button
-                  type="button"
-                  className={`px-4 py-2 text-sm font-medium ${
-                    viewMode === 'grid'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  } rounded-l-md`}
-                  onClick={() => setViewMode('grid')}
+            
+            <div className="md:w-48">
+              <label htmlFor="category" className="sr-only">
+                Filter by category
+              </label>
+              <div className="relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <FunnelIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </div>
+                <select
+                  id="category"
+                  name="category"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 pl-10 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 >
-                  Grid
-                </button>
-                <button
-                  type="button"
-                  className={`px-4 py-2 text-sm font-medium ${
-                    viewMode === 'list'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  } rounded-r-md`}
-                  onClick={() => setViewMode('list')}
-                >
-                  List
-                </button>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+            
+            <div className="md:w-48">
+              <label htmlFor="rating" className="sr-only">
+                Filter by rating
+              </label>
+              <div className="relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <StarIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </div>
+                <select
+                  id="rating"
+                  name="rating"
+                  value={ratingFilter}
+                  onChange={(e) => setRatingFilter(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 pl-10 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
+                  <option value="all">All Ratings</option>
+                  <option value="4.5">4.5+ Stars</option>
+                  <option value="4">4+ Stars</option>
+                  <option value="3.5">3.5+ Stars</option>
+                  <option value="3">3+ Stars</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex space-x-4">
+            <button
+              onClick={() => setViewMode('all')}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${
+                viewMode === 'all'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              All Providers
+            </button>
+            <button
+              onClick={() => setViewMode('saved')}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${
+                viewMode === 'saved'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Saved Providers
+            </button>
           </div>
         </div>
-
-        {/* Providers display */}
-        {viewMode === 'grid' ? (
-          <div className="mt-8 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProviders.length > 0 ? (
-              filteredProviders.map((provider) => (
-                <div key={provider.id} className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="h-32 w-full overflow-hidden relative">
-                    <img
-                      src={provider.cover}
-                      alt={provider.company}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black opacity-50"></div>
-                    <div className="absolute bottom-4 left-4 flex items-center">
-                      <img
-                        className="h-12 w-12 rounded-full ring-2 ring-white"
-                        src={provider.avatar}
-                        alt={provider.name}
-                      />
-                      <div className="ml-3 text-white">
-                        <p className="text-sm font-medium">{provider.name}</p>
-                        <p className="text-xs">{provider.company}</p>
+      </div>
+      
+      {/* Provider List */}
+      <div className="space-y-6">
+        {filteredProviders.length === 0 ? (
+          <div className="bg-white shadow sm:rounded-lg py-12 text-center">
+            <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No providers found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {viewMode === 'saved' 
+                ? "You haven't saved any providers yet."
+                : "Try adjusting your filters or search terms."}
+            </p>
+          </div>
+        ) : (
+          filteredProviders.map((provider) => (
+            <div key={provider.id} className="bg-white shadow sm:rounded-lg overflow-hidden">
+              <div className="md:flex">
+                <div className="md:flex-shrink-0 h-48 md:h-auto md:w-48">
+                  <img
+                    className="h-full w-full object-cover md:h-full md:w-full"
+                    src={provider.image}
+                    alt={provider.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/300x300?text=Provider';
+                    }}
+                  />
+                </div>
+                <div className="p-6 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {provider.name}
+                        {provider.verified && (
+                          <CheckBadgeIcon className="ml-1 inline-block h-5 w-5 text-primary-600" aria-hidden="true" title="Verified Provider" />
+                        )}
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">{getCategoryName(provider.category)}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="flex items-center">
+                        {[0, 1, 2, 3, 4].map((rating) => (
+                          <StarIcon
+                            key={rating}
+                            className={`${
+                              provider.rating > rating ? 'text-yellow-400' : 'text-gray-300'
+                            } h-5 w-5 flex-shrink-0`}
+                            aria-hidden="true"
+                          />
+                        ))}
+                      </div>
+                      <p className="ml-2 text-sm text-gray-700">
+                        {provider.rating} ({provider.reviewCount} reviews)
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <p className="mt-3 text-sm text-gray-500">{provider.description}</p>
+                  
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900">Services</h4>
+                      <ul className="mt-2 text-sm text-gray-500 space-y-1">
+                        {provider.services.slice(0, 3).map((service, index) => (
+                          <li key={index}>{service}</li>
+                        ))}
+                        {provider.services.length > 3 && (
+                          <li>+{provider.services.length - 3} more services</li>
+                        )}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900">Contact Information</h4>
+                      <div className="mt-2 text-sm text-gray-500 space-y-1">
+                        <p className="flex items-center">
+                          <MapPinIcon className="h-4 w-4 text-gray-400 mr-1" />
+                          {provider.address}
+                        </p>
+                        <p className="flex items-center">
+                          <PhoneIcon className="h-4 w-4 text-gray-400 mr-1" />
+                          {provider.phone}
+                        </p>
+                        <p className="flex items-center">
+                          <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-1" />
+                          {provider.email}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  <div className="px-4 py-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        {renderStars(provider.rating)}
-                        <span className="ml-1 text-xs text-gray-500">({provider.reviews})</span>
-                      </div>
-                      <span className="text-xs text-gray-500">{provider.location}</span>
+                  
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium">{provider.yearsInBusiness} years</span> in business
+                      {provider.licensedInsured && (
+                        <span className="ml-2">• Licensed & Insured</span>
+                      )}
                     </div>
-                    <p className="mt-2 text-sm text-gray-500 line-clamp-2">{provider.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {provider.services.map((service, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-4 flex justify-between">
-                      <Link
-                        to={`/homeowner/providers/${provider.id}`}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => toggleSaveProvider(provider.id)}
+                        className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                          savedProviders.includes(provider.id)
+                            ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                        }`}
                       >
-                        View Profile
+                        {savedProviders.includes(provider.id) ? 'Saved' : 'Save'}
+                      </button>
+                      <Link
+                        to={`/homeowner/messages?provider=${provider.id}`}
+                        className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                      >
+                        <ChatBubbleLeftRightIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                        Contact
                       </Link>
-                      <div className="flex space-x-2">
-                        <button
-                          type="button"
-                          className="inline-flex items-center px-2 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <ChatBubbleLeftRightIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center px-2 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <PhoneIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-full bg-white overflow-hidden shadow rounded-lg p-6 text-center text-gray-500">
-                No providers found matching your criteria
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-            <ul className="divide-y divide-gray-200">
-              {filteredProviders.length > 0 ? (
-                filteredProviders.map((provider) => (
-                  <li key={provider.id} className="px-6 py-4">
-                    <div className="flex items-center">
-                      <img
-                        className="h-16 w-16 rounded-full"
-                        src={provider.avatar}
-                        alt={provider.name}
-                      />
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-medium text-gray-900">{provider.name}</h3>
-                            <p className="text-sm text-gray-500">{provider.company}</p>
-                          </div>
-                          <div className="flex items-center">
-                            {renderStars(provider.rating)}
-                            <span className="ml-1 text-xs text-gray-500">({provider.reviews})</span>
-                          </div>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500">{provider.description}</p>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex flex-wrap gap-1">
-                            {provider.services.map((service, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-500">{provider.location}</span>
-                        </div>
-                        <div className="mt-3 flex justify-between items-center">
-                          <div className="text-xs text-gray-500">
-                            {provider.projects_completed} projects completed
-                          </div>
-                          <div className="flex space-x-3">
-                            <button
-                              type="button"
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              <PhoneIcon className="-ml-0.5 mr-1 h-4 w-4" aria-hidden="true" />
-                              Call
-                            </button>
-                            <button
-                              type="button"
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              <ChatBubbleLeftRightIcon className="-ml-0.5 mr-1 h-4 w-4" aria-hidden="true" />
-                              Message
-                            </button>
-                            <Link
-                              to={`/homeowner/providers/${provider.id}`}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              View Profile
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="px-6 py-4 text-center text-gray-500">
-                  No providers found matching your criteria
-                </li>
-              )}
-            </ul>
-          </div>
+            </div>
+          ))
         )}
       </div>
     </div>
   );
 };
 
-export default HomeownerProviders;
+export default Providers;

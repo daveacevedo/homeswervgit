@@ -6,6 +6,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [userRole, setUserRole] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -16,8 +17,8 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+    if (!email || !password || !confirmPassword || !userRole) {
+      setError('Please fill in all fields and select a user role');
       return;
     }
     
@@ -34,11 +35,17 @@ const Register = () => {
     try {
       setError('');
       setLoading(true);
-      await register(email, password);
+      
+      // Log for debugging
+      console.log('Attempting to register with:', { email, password: '***', userRole });
+      
+      const result = await register(email, password, userRole);
+      console.log('Registration result:', result);
+      
       navigate('/user-type-selection');
     } catch (err) {
-      setError('Failed to create an account. ' + (err.message || ''));
-      console.error(err);
+      console.error('Registration error:', err);
+      setError('Failed to create an account. ' + (err.message || err.toString()));
     } finally {
       setLoading(false);
     }
@@ -138,6 +145,53 @@ const Register = () => {
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="••••••••"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                I am a:
+              </label>
+              <div className="space-y-4">
+                <div className="relative flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="role-homeowner"
+                      name="user-role"
+                      type="radio"
+                      checked={userRole === 'homeowner'}
+                      onChange={() => setUserRole('homeowner')}
+                      className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      required
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="role-homeowner" className="font-medium text-gray-700">
+                      Homeowner
+                    </label>
+                    <p className="text-gray-500">I want to find and hire service providers for my home</p>
+                  </div>
+                </div>
+                
+                <div className="relative flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="role-provider"
+                      name="user-role"
+                      type="radio"
+                      checked={userRole === 'provider'}
+                      onChange={() => setUserRole('provider')}
+                      className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      required
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="role-provider" className="font-medium text-gray-700">
+                      Service Provider
+                    </label>
+                    <p className="text-gray-500">I want to offer my services to homeowners</p>
+                  </div>
+                </div>
               </div>
             </div>
 
