@@ -1,18 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabaseClient';
+import { useAuth } from './AuthContext';
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const { user } = useAuth();
-  const [activeRole, setActiveRole] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
+  const [activeRole, setActiveRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch user roles when user changes
   useEffect(() => {
-    const fetchUserRoles = async () => {
+    async function fetchUserRoles() {
       if (!user) {
         setUserRoles([]);
         setActiveRole(null);
@@ -23,152 +24,89 @@ export function AppProvider({ children }) {
       try {
         setLoading(true);
         
-        // Fetch roles from the database
+        // Check if user is an admin first
+        const { data: adminData, error: adminError } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (adminData) {
+          // User is an admin
+          setUserRoles(['admin']);
+          setActiveRole('admin');
+          setLoading(false);
+          return;
+        }
+        
+        // If not admin, check regular user roles
         const { data, error } = await supabase
           .from('user_roles')
           .select('*')
           .eq('user_id', user.id);
-        
-        if (error) {
-          throw error;
-        }
+
+        if (error) throw error;
 
         if (data && data.length > 0) {
-          // Extract role names
-          const roles = data.map(item => item.role);
+          const roles = data.map(role => role.role);
           setUserRoles(roles);
           
           // Find primary role or use the first one
-          const primaryRole = data.find(item => item.is_primary);
-          if (primaryRole) {
-            setActiveRole(primaryRole.role);
-          } else {
-            setActiveRole(roles[0]);
-          }
+          const primaryRole = data.find(role => role.is_primary);
+          setActiveRole(primaryRole ? primaryRole.role : data[0].role);
         } else {
-          // If no roles found, set default role
-          setUserRoles(['homeowner']);
-          setActiveRole('homeowner');
-          
-          // Create default role in database
-          await supabase
-            .from('user_roles')
-            .insert([
-              { user_id: user.id, role: 'homeowner', is_primary: true }
-            ]);
+          setUserRoles([]);
+          setActiveRole(null);
         }
-      } catch (error) {
-        console.error('Error fetching user roles:', error);
+      } catch (err) {
+        console.error('Error fetching user roles:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchUserRoles();
   }, [user]);
 
-  // Update primary role when active role changes
-  useEffect(() => {
-    const updatePrimaryRole = async () => {
-      if (!user || !activeRole) return;
+  // Function to switch active role
+  const switchRole = async (newRole) => {
+    if (!user || !userRoles.includes(newRole)) {
+      return false;
+    }
 
-      try {
-        // First, set all roles to not primary
+    try {
+      setActiveRole(newRole);
+      
+      // Update primary role in database if it's not admin
+      // (admin is handled separately in admin_users table)
+      if (newRole !== 'admin') {
         await supabase
           .from('user_roles')
           .update({ is_primary: false })
           .eq('user_id', user.id);
-        
-        // Then set the active role as primary
+          
         await supabase
           .from('user_roles')
           .update({ is_primary: true })
           .eq('user_id', user.id)
-          .eq('role', activeRole);
-      } catch (error) {
-        console.error('Error updating primary role:', error);
+          .eq('role', newRole);
       }
-    };
-
-    if (user && activeRole) {
-      updatePrimaryRole();
-    }
-  }, [user, activeRole]);
-
-  // Function to add a new role to the user
-  const addUserRole = async (role) => {
-    if (!user) return;
-
-    try {
-      // Check if role already exists
-      if (userRoles.includes(role)) {
-        return;
-      }
-
-      // Add role to database
-      const { error } = await supabase
-        .from('user_roles')
-        .insert([
-          { user_id: user.id, role, is_primary: userRoles.length === 0 }
-        ]);
       
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
-      setUserRoles([...userRoles, role]);
-      
-      // If this is the first role, set it as active
-      if (userRoles.length === 0) {
-        setActiveRole(role);
-      }
-    } catch (error) {
-      console.error('Error adding user role:', error);
-    }
-  };
-
-  // Function to remove a role from the user
-  const removeUserRole = async (role) => {
-    if (!user) return;
-
-    try {
-      // Don't allow removing the last role
-      if (userRoles.length <= 1) {
-        return;
-      }
-
-      // Remove role from database
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('role', role);
-      
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
-      const updatedRoles = userRoles.filter(r => r !== role);
-      setUserRoles(updatedRoles);
-      
-      // If active role was removed, set a new active role
-      if (activeRole === role) {
-        setActiveRole(updatedRoles[0]);
-      }
-    } catch (error) {
-      console.error('Error removing user role:', error);
+      return true;
+    } catch (err) {
+      console.error('Error switching role:', err);
+      setError(err.message);
+      return false;
     }
   };
 
   const value = {
-    activeRole,
-    setActiveRole,
     userRoles,
-    addUserRole,
-    removeUserRole,
-    loading
+    activeRole,
+    loading,
+    error,
+    switchRole
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

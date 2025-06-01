@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useHomeowner } from '../../contexts/HomeownerContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../utils/supabaseClient';
 import { 
   WrenchScrewdriverIcon, 
   MagnifyingGlassIcon,
@@ -9,137 +10,155 @@ import {
   ClockIcon,
   CalendarIcon,
   ExclamationTriangleIcon,
-  PlusIcon
+  PlusIcon,
+  ArrowDownTrayIcon,
+  ViewColumnsIcon,
+  TableCellsIcon
 } from '@heroicons/react/24/outline';
+import ProjectKanbanView from '../../components/homeowner/projects/ProjectKanbanView';
 
 const Projects = () => {
-  const { homeownerProfile } = useHomeowner();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'kanban'
   
   useEffect(() => {
-    // Simulate fetching data
-    const fetchProjects = async () => {
-      try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock data
-        const mockProjects = [
-          {
-            id: 'proj-1',
-            title: 'Bathroom Renovation',
-            description: 'Complete renovation of master bathroom including new fixtures, tile, and vanity',
-            status: 'in_progress',
-            provider: {
-              id: 'prov-1',
-              name: 'Ace Plumbing & Remodeling',
-              rating: 4.8
-            },
-            startDate: '2023-10-01',
-            estimatedEndDate: '2023-12-15',
-            progress: 65,
-            budget: 12500,
-            nextMilestone: 'Tile Installation',
-            nextMilestoneDate: '2023-11-15',
-            location: 'Master Bathroom',
-            priority: 'high',
-            lastUpdated: '2023-11-02T14:30:00'
+    if (user) {
+      fetchProjects();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+  
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      
+      // In a real app, this would fetch from Supabase
+      // For now, we'll use mock data
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*, project_members(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // If no data, use mock data
+      const projectData = data && data.length > 0 ? data : [
+        {
+          id: 'proj-1',
+          title: 'Bathroom Renovation',
+          description: 'Complete renovation of master bathroom including new fixtures, tile, and vanity',
+          status: 'in_progress',
+          provider: {
+            id: 'prov-1',
+            name: 'Ace Plumbing & Remodeling',
+            rating: 4.8
           },
-          {
-            id: 'proj-2',
-            title: 'Lawn Maintenance',
-            description: 'Bi-weekly lawn maintenance including mowing, edging, and cleanup',
-            status: 'scheduled',
-            provider: {
-              id: 'prov-2',
-              name: 'Green Thumb Landscaping',
-              rating: 4.6
-            },
-            startDate: '2023-11-10',
-            estimatedEndDate: '2024-11-10',
-            progress: 0,
-            budget: 2400,
-            nextMilestone: 'Initial Service',
-            nextMilestoneDate: '2023-11-10',
-            location: 'Front and Back Yard',
-            priority: 'medium',
-            lastUpdated: '2023-10-28T09:15:00'
+          startDate: '2023-10-01',
+          estimatedEndDate: '2023-12-15',
+          progress: 65,
+          budget: 12500,
+          nextMilestone: 'Tile Installation',
+          nextMilestoneDate: '2023-11-15',
+          location: 'Master Bathroom',
+          priority: 'high',
+          lastUpdated: '2023-11-02T14:30:00'
+        },
+        {
+          id: 'proj-2',
+          title: 'Lawn Maintenance',
+          description: 'Bi-weekly lawn maintenance including mowing, edging, and cleanup',
+          status: 'scheduled',
+          provider: {
+            id: 'prov-2',
+            name: 'Green Thumb Landscaping',
+            rating: 4.6
           },
-          {
-            id: 'proj-3',
-            title: 'Electrical Panel Upgrade',
-            description: 'Upgrade electrical panel from 100A to 200A service',
-            status: 'completed',
-            provider: {
-              id: 'prov-3',
-              name: 'Bright Spark Electric',
-              rating: 4.9
-            },
-            startDate: '2023-10-15',
-            completedDate: '2023-10-28',
-            progress: 100,
-            budget: 2800,
-            location: 'Garage',
-            priority: 'high',
-            lastUpdated: '2023-10-28T16:45:00'
+          startDate: '2023-11-10',
+          estimatedEndDate: '2024-11-10',
+          progress: 0,
+          budget: 2400,
+          nextMilestone: 'Initial Service',
+          nextMilestoneDate: '2023-11-10',
+          location: 'Front and Back Yard',
+          priority: 'medium',
+          lastUpdated: '2023-10-28T09:15:00'
+        },
+        {
+          id: 'proj-3',
+          title: 'Electrical Panel Upgrade',
+          description: 'Upgrade electrical panel from 100A to 200A service',
+          status: 'completed',
+          provider: {
+            id: 'prov-3',
+            name: 'Bright Spark Electric',
+            rating: 4.9
           },
-          {
-            id: 'proj-4',
-            title: 'Kitchen Remodel',
-            description: 'Complete kitchen renovation with new cabinets, countertops, and appliances',
-            status: 'planning',
-            provider: null,
-            estimatedStartDate: '2024-01-15',
-            estimatedEndDate: '2024-03-15',
-            progress: 0,
-            estimatedBudget: 25000,
-            location: 'Kitchen',
-            priority: 'medium',
-            lastUpdated: '2023-10-20T11:30:00'
+          startDate: '2023-10-15',
+          completedDate: '2023-10-28',
+          progress: 100,
+          budget: 2800,
+          location: 'Garage',
+          priority: 'high',
+          lastUpdated: '2023-10-28T16:45:00'
+        },
+        {
+          id: 'proj-4',
+          title: 'Kitchen Remodel',
+          description: 'Complete kitchen renovation with new cabinets, countertops, and appliances',
+          status: 'planning',
+          provider: null,
+          estimatedStartDate: '2024-01-15',
+          estimatedEndDate: '2024-03-15',
+          progress: 0,
+          estimatedBudget: 25000,
+          location: 'Kitchen',
+          priority: 'medium',
+          lastUpdated: '2023-10-20T11:30:00'
+        },
+        {
+          id: 'proj-5',
+          title: 'Roof Repair',
+          description: 'Repair damaged shingles and fix leak in northwest corner of roof',
+          status: 'on_hold',
+          provider: {
+            id: 'prov-4',
+            name: 'Top Notch Roofing',
+            rating: 4.7
           },
-          {
-            id: 'proj-5',
-            title: 'Roof Repair',
-            description: 'Repair damaged shingles and fix leak in northwest corner of roof',
-            status: 'on_hold',
-            provider: {
-              id: 'prov-4',
-              name: 'Top Notch Roofing',
-              rating: 4.7
-            },
-            startDate: '2023-09-15',
-            progress: 25,
-            budget: 3200,
-            location: 'Roof',
-            priority: 'high',
-            holdReason: 'Weather conditions',
-            lastUpdated: '2023-10-05T10:20:00'
-          }
-        ];
-        
-        setProjects(mockProjects);
-        setFilteredProjects(mockProjects);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setLoading(false);
-      }
-    };
-    
-    fetchProjects();
-  }, []);
+          startDate: '2023-09-15',
+          progress: 25,
+          budget: 3200,
+          location: 'Roof',
+          priority: 'high',
+          holdReason: 'Weather conditions',
+          lastUpdated: '2023-10-05T10:20:00'
+        }
+      ];
+      
+      setProjects(projectData);
+      setFilteredProjects(projectData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setLoading(false);
+    }
+  };
   
   useEffect(() => {
     // Filter projects based on search term and status filter
     const filtered = projects.filter(project => {
-      const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (project.provider && project.provider.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch = project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           project.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (project.provider && project.provider.name?.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
       
@@ -238,6 +257,54 @@ const Projects = () => {
     });
   };
   
+  const exportToCSV = () => {
+    // Create CSV content
+    const headers = [
+      'Title',
+      'Description',
+      'Status',
+      'Priority',
+      'Location',
+      'Budget',
+      'Start Date',
+      'End Date',
+      'Progress',
+      'Provider',
+      'Last Updated'
+    ];
+    
+    const rows = filteredProjects.map(project => [
+      project.title,
+      project.description,
+      project.status,
+      project.priority,
+      project.location,
+      project.budget || project.estimatedBudget,
+      project.startDate || project.estimatedStartDate,
+      project.completedDate || project.estimatedEndDate,
+      project.progress || 0,
+      project.provider ? project.provider.name : 'None',
+      new Date(project.lastUpdated).toLocaleString()
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'projects.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -259,6 +326,13 @@ const Projects = () => {
             </p>
           </div>
           <div className="mt-4 flex md:ml-4 md:mt-0">
+            <button
+              onClick={exportToCSV}
+              className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              <ArrowDownTrayIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+              Export CSV
+            </button>
             <Link
               to="/homeowner/projects/new"
               className="ml-3 inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
@@ -269,7 +343,7 @@ const Projects = () => {
           </div>
         </div>
         
-        {/* Filters */}
+        {/* Filters and View Toggle */}
         <div className="bg-white shadow sm:rounded-lg mb-6">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -316,136 +390,164 @@ const Projects = () => {
                   </select>
                 </div>
               </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`inline-flex items-center p-2 rounded-md ${
+                    viewMode === 'list' 
+                      ? 'bg-primary-100 text-primary-700' 
+                      : 'bg-white text-gray-400 hover:text-gray-500'
+                  }`}
+                  title="List View"
+                >
+                  <TableCellsIcon className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`inline-flex items-center p-2 rounded-md ${
+                    viewMode === 'kanban' 
+                      ? 'bg-primary-100 text-primary-700' 
+                      : 'bg-white text-gray-400 hover:text-gray-500'
+                  }`}
+                  title="Kanban View"
+                >
+                  <ViewColumnsIcon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Projects List */}
-        <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-          {filteredProjects.length === 0 ? (
-            <div className="py-12 text-center">
-              <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {projects.length === 0 
-                  ? "You haven't created any projects yet."
-                  : "No projects match your current filters."}
-              </p>
-              {projects.length === 0 && (
-                <div className="mt-6">
-                  <Link
-                    to="/homeowner/projects/new"
-                    className="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-                  >
-                    <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
-                    Create your first project
-                  </Link>
-                </div>
-              )}
-            </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {filteredProjects.map((project) => (
-                <li key={project.id}>
-                  <Link to={`/homeowner/projects/${project.id}`} className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <WrenchScrewdriverIcon className="h-8 w-8 text-primary-600" />
+        {/* Projects View (List or Kanban) */}
+        {viewMode === 'kanban' ? (
+          <ProjectKanbanView projects={filteredProjects} />
+        ) : (
+          <div className="bg-white shadow sm:rounded-lg overflow-hidden">
+            {filteredProjects.length === 0 ? (
+              <div className="py-12 text-center">
+                <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {projects.length === 0 
+                    ? "You haven't created any projects yet."
+                    : "No projects match your current filters."}
+                </p>
+                {projects.length === 0 && (
+                  <div className="mt-6">
+                    <Link
+                      to="/homeowner/projects/new"
+                      className="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                    >
+                      <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                      Create your first project
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {filteredProjects.map((project) => (
+                  <li key={project.id}>
+                    <Link to={`/homeowner/projects/${project.id}`} className="block hover:bg-gray-50">
+                      <div className="px-4 py-4 sm:px-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <WrenchScrewdriverIcon className="h-8 w-8 text-primary-600" />
+                            </div>
+                            <div className="ml-4">
+                              <p className="text-lg font-medium text-gray-900">{project.title}</p>
+                              <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                            </div>
                           </div>
-                          <div className="ml-4">
-                            <p className="text-lg font-medium text-gray-900">{project.title}</p>
-                            <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                          <div className="flex flex-col items-end">
+                            {getStatusBadge(project.status)}
+                            <div className="mt-2">
+                              {getPriorityBadge(project.priority)}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end">
-                          {getStatusBadge(project.status)}
+                        
+                        <div className="mt-4 sm:flex sm:justify-between">
+                          <div className="sm:flex">
+                            <p className="flex items-center text-sm text-gray-500">
+                              <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
+                              </svg>
+                              {project.location}
+                            </p>
+                            <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                              <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
+                              </svg>
+                              {project.status === 'completed'
+                                ? `Completed on ${formatDate(project.completedDate)}`
+                                : project.status === 'planning'
+                                  ? `Planned start: ${formatDate(project.estimatedStartDate)}`
+                                  : `Started: ${formatDate(project.startDate)}`}
+                            </p>
+                          </div>
+                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                            <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.798 7.45c.512-.67 1.135-.95 1.702-.95s1.19.28 1.702.95a.75.75 0 001.192-.91C12.637 5.55 11.596 5 10.5 5s-2.137.55-2.894 1.54A.75.75 0 008.798 7.45zM5.904 10.5c.37.33.84.5 1.346.5.37 0 .733-.09 1.05-.26a.75.75 0 01.707 1.32A3.3 3.3 0 017.25 12.5c-.834 0-1.571-.296-2.096-.79a.75.75 0 01.75-1.21zM10 13a1 1 0 100-2 1 1 0 000 2zm4.25-1.5c.37 0 .733-.09 1.05-.26a.75.75 0 01.707 1.32 3.3 3.3 0 01-1.757.44c-.834 0-1.571-.296-2.096-.79a.75.75 0 11.75-1.21c.37.33.84.5 1.346.5z" clipRule="evenodd" />
+                            </svg>
+                            {project.provider
+                              ? `${project.provider.name} (${project.provider.rating}★)`
+                              : 'No provider assigned'}
+                          </div>
+                        </div>
+                        
+                        {project.status === 'in_progress' && (
+                          <div className="mt-4">
+                            <div className="relative pt-1">
+                              <div className="flex mb-2 items-center justify-between">
+                                <div>
+                                  <span className="text-xs font-semibold inline-block text-primary-600">
+                                    Progress: {project.progress}%
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-xs font-semibold inline-block text-primary-600">
+                                    {formatCurrency(project.budget)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary-200">
+                                <div
+                                  style={{ width: `${project.progress}%` }}
+                                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary-500"
+                                ></div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              <span className="font-medium">Next milestone:</span> {project.nextMilestone} (Due: {formatDate(project.nextMilestoneDate)})
+                            </p>
+                          </div>
+                        )}
+                        
+                        {project.status === 'on_hold' && (
                           <div className="mt-2">
-                            {getPriorityBadge(project.priority)}
+                            <p className="text-sm text-orange-600">
+                              <ExclamationTriangleIcon className="inline h-4 w-4 mr-1" />
+                              On hold: {project.holdReason}
+                            </p>
                           </div>
+                        )}
+                        
+                        <div className="mt-2 text-xs text-gray-500 text-right">
+                          Last updated: {new Date(project.lastUpdated).toLocaleString()}
                         </div>
                       </div>
-                      
-                      <div className="mt-4 sm:flex sm:justify-between">
-                        <div className="sm:flex">
-                          <p className="flex items-center text-sm text-gray-500">
-                            <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
-                            </svg>
-                            {project.location}
-                          </p>
-                          <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                            <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
-                            </svg>
-                            {project.status === 'completed'
-                              ? `Completed on ${formatDate(project.completedDate)}`
-                              : project.status === 'planning'
-                                ? `Planned start: ${formatDate(project.estimatedStartDate)}`
-                                : `Started: ${formatDate(project.startDate)}`}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                          <svg className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.798 7.45c.512-.67 1.135-.95 1.702-.95s1.19.28 1.702.95a.75.75 0 001.192-.91C12.637 5.55 11.596 5 10.5 5s-2.137.55-2.894 1.54A.75.75 0 008.798 7.45zM5.904 10.5c.37.33.84.5 1.346.5.37 0 .733-.09 1.05-.26a.75.75 0 01.707 1.32A3.3 3.3 0 017.25 12.5c-.834 0-1.571-.296-2.096-.79a.75.75 0 01.75-1.21zM10 13a1 1 0 100-2 1 1 0 000 2zm4.25-1.5c.37 0 .733-.09 1.05-.26a.75.75 0 01.707 1.32 3.3 3.3 0 01-1.757.44c-.834 0-1.571-.296-2.096-.79a.75.75 0 11.75-1.21c.37.33.84.5 1.346.5z" clipRule="evenodd" />
-                          </svg>
-                          {project.provider
-                            ? `${project.provider.name} (${project.provider.rating}★)`
-                            : 'No provider assigned'}
-                        </div>
-                      </div>
-                      
-                      {project.status === 'in_progress' && (
-                        <div className="mt-4">
-                          <div className="relative pt-1">
-                            <div className="flex mb-2 items-center justify-between">
-                              <div>
-                                <span className="text-xs font-semibold inline-block text-primary-600">
-                                  Progress: {project.progress}%
-                                </span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-xs font-semibold inline-block text-primary-600">
-                                  {formatCurrency(project.budget)}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary-200">
-                              <div
-                                style={{ width: `${project.progress}%` }}
-                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary-500"
-                              ></div>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            <span className="font-medium">Next milestone:</span> {project.nextMilestone} (Due: {formatDate(project.nextMilestoneDate)})
-                          </p>
-                        </div>
-                      )}
-                      
-                      {project.status === 'on_hold' && (
-                        <div className="mt-2">
-                          <p className="text-sm text-orange-600">
-                            <ExclamationTriangleIcon className="inline h-4 w-4 mr-1" />
-                            On hold: {project.holdReason}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="mt-2 text-xs text-gray-500 text-right">
-                        Last updated: {new Date(project.lastUpdated).toLocaleString()}
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
       
-      {/* FoxyApps Embed Section */}
+      {/* Project Planning Tool */}
       <div className="lg:w-[400px] bg-white shadow sm:rounded-lg p-4">
         <div className="mb-4">
           <h3 className="text-lg font-medium leading-6 text-gray-900">Project Planning Tool</h3>

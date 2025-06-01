@@ -1,50 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 
-const RoleSwitcher = () => {
-  const { activeRole, userRoles, setActiveRole } = useApp();
+const RoleSwitcher = ({ isMobile = false }) => {
+  const { userRoles, activeRole, switchRole } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isOpen && !event.target.closest('.role-switcher')) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  // If no roles or only one role, don't show the switcher
-  if (!userRoles || userRoles.length <= 1) {
+  // Don't render if user has only one role
+  if (userRoles.length <= 1) {
     return null;
   }
 
-  const handleRoleChange = (role) => {
-    setActiveRole(role);
+  const handleRoleSwitch = async (role) => {
+    if (role === activeRole) {
+      setIsOpen(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const success = await switchRole(role);
+    setIsLoading(false);
     setIsOpen(false);
 
-    // Navigate to the appropriate dashboard based on the selected role
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
-    } else if (role === 'homeowner') {
-      navigate('/homeowner/dashboard');
-    } else if (role === 'provider') {
-      navigate('/provider/dashboard');
+    if (success) {
+      // Redirect to appropriate dashboard
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (role === 'homeowner') {
+        navigate('/homeowner/dashboard');
+      } else if (role === 'provider') {
+        navigate('/provider/dashboard');
+      }
     }
   };
 
-  // Get the display name for the role
-  const getRoleDisplayName = (role) => {
+  const getRoleName = (role) => {
     switch (role) {
       case 'admin':
-        return 'Admin';
+        return 'Administrator';
       case 'homeowner':
         return 'Homeowner';
       case 'provider':
@@ -54,67 +49,68 @@ const RoleSwitcher = () => {
     }
   };
 
-  // Get the color for the role badge
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800';
-      case 'homeowner':
-        return 'bg-blue-100 text-blue-800';
-      case 'provider':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  if (isMobile) {
+    return (
+      <div className="space-y-1">
+        {userRoles.map((role) => (
+          <button
+            key={role}
+            onClick={() => handleRoleSwitch(role)}
+            disabled={isLoading}
+            className={`block w-full text-left px-4 py-2 text-base font-medium ${
+              role === activeRole
+                ? 'bg-gray-100 text-gray-900'
+                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+            }`}
+          >
+            Switch to {getRoleName(role)}
+            {role === activeRole && ' (Current)'}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className="relative role-switcher">
+    <div className="relative">
       <button
         type="button"
-        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         onClick={() => setIsOpen(!isOpen)}
+        disabled={isLoading}
       >
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(activeRole)}`}>
-          {getRoleDisplayName(activeRole)}
-        </span>
-        <svg
-          className={`ml-2 h-5 w-5 text-gray-400 ${isOpen ? 'transform rotate-180' : ''}`}
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
+        {isLoading ? (
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        ) : (
+          <svg className="-ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        )}
+        {getRoleName(activeRole)}
+        <svg className="-mr-1 ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+        <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
             {userRoles.map((role) => (
               <button
                 key={role}
-                onClick={() => handleRoleChange(role)}
-                className={`w-full text-left block px-4 py-2 text-sm ${
-                  activeRole === role ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'
+                onClick={() => handleRoleSwitch(role)}
+                className={`block w-full text-left px-4 py-2 text-sm ${
+                  role === activeRole
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
                 role="menuitem"
               >
-                <div className="flex items-center">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(role)}`}>
-                    {getRoleDisplayName(role)}
-                  </span>
-                  {activeRole === role && (
-                    <svg className="ml-2 h-4 w-4 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
+                Switch to {getRoleName(role)}
+                {role === activeRole && ' (Current)'}
               </button>
             ))}
           </div>

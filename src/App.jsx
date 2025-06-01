@@ -1,106 +1,123 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
-import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AppProvider } from "./contexts/AppContext";
+import { AdminProvider } from "./contexts/AdminContext";
 
-// Import layouts
-import MainLayout from './components/layout/MainLayout';
-import AdminLayout from './components/layout/AdminLayout';
-import HomeownerLayout from './components/layout/HomeownerLayout';
-import ProviderLayout from './components/layout/ProviderLayout';
+// Layouts
+import MainLayout from "./components/layout/MainLayout";
+import AdminLayout from "./components/layout/AdminLayout";
+import HomeownerLayout from "./components/layout/HomeownerLayout";
+import ProviderLayout from "./components/layout/ProviderLayout";
 
-// Import pages
-import Home from './pages/public/Home';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Pricing from './pages/public/Pricing';
-import Features from './pages/public/Features';
-import ForSale from './pages/ForSale';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
-import UserTypeSelection from './components/dashboard/UserTypeSelection';
+// Public Pages
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import UserTypeSelection from "./pages/auth/UserTypeSelection";
+import Pricing from "./pages/Pricing";
+import Features from "./pages/Features";
+import ForSale from "./pages/ForSale";
 
-// Import admin pages
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminUsers from './pages/admin/Users';
-import AdminSettings from './pages/admin/Settings';
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsers from "./pages/admin/Users";
+import AdminProperties from "./pages/admin/Properties";
+import AdminSettings from "./pages/admin/Settings";
 
-// Import homeowner pages
-import HomeownerDashboard from './pages/homeowner/Dashboard';
-import HomeownerProfile from './pages/homeowner/Profile';
-import HomeownerProjects from './pages/homeowner/Projects';
+// Homeowner Pages
+import HomeownerDashboard from "./pages/homeowner/Dashboard";
+import HomeownerProperties from "./pages/homeowner/Properties";
+import HomeownerSettings from "./pages/homeowner/Settings";
+import HomeownerVisionBoard from "./pages/homeowner/VisionBoard";
+import HomeownerProjects from "./pages/homeowner/Projects";
+import CreateProject from "./pages/homeowner/CreateProject";
+import ProjectDetail from "./pages/homeowner/ProjectDetail";
 
-// Import provider pages
-import ProviderDashboard from './pages/provider/Dashboard';
-import ProviderProfile from './pages/provider/Profile';
-import ProviderServices from './pages/provider/Services';
+// Provider Pages
+import ProviderDashboard from "./pages/provider/Dashboard";
+import ProviderJobs from "./pages/provider/Jobs";
+import ProviderSettings from "./pages/provider/Settings";
+
+// Components
+import RoleProtectedRoute from "./components/auth/RoleProtectedRoute";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <AppProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="about" element={<About />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="pricing" element={<Pricing />} />
-              <Route path="features" element={<Features />} />
-              <Route path="for-sale" element={<ForSale />} />
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-              <Route path="user-type-selection" element={<UserTypeSelection />} />
-            </Route>
+          <AdminProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<Home />} />
+                <Route path="about" element={<About />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="pricing" element={<Pricing />} />
+                <Route path="features" element={<Features />} />
+                <Route path="for-sale" element={<ForSale />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="forgot-password" element={<ForgotPassword />} />
+                <Route path="reset-password" element={<ResetPassword />} />
+                <Route path="user-type-selection" element={<UserTypeSelection />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
 
-            {/* Admin routes */}
-            <Route
-              path="/admin"
-              element={
-                <RoleProtectedRoute allowedRoles={['admin']}>
-                  <AdminLayout />
-                </RoleProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <RoleProtectedRoute requiredRole="admin">
+                    <AdminLayout />
+                  </RoleProtectedRoute>
+                }
+              >
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="properties" element={<AdminProperties />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
 
-            {/* Homeowner routes */}
-            <Route
-              path="/homeowner"
-              element={
-                <RoleProtectedRoute allowedRoles={['homeowner']}>
-                  <HomeownerLayout />
-                </RoleProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<HomeownerDashboard />} />
-              <Route path="profile" element={<HomeownerProfile />} />
-              <Route path="projects" element={<HomeownerProjects />} />
-            </Route>
+              {/* Homeowner Routes */}
+              <Route
+                path="/homeowner"
+                element={
+                  <RoleProtectedRoute requiredRole="homeowner">
+                    <HomeownerLayout />
+                  </RoleProtectedRoute>
+                }
+              >
+                <Route path="dashboard" element={<HomeownerDashboard />} />
+                <Route path="properties" element={<HomeownerProperties />} />
+                <Route path="settings" element={<HomeownerSettings />} />
+                <Route path="vision-board" element={<HomeownerVisionBoard />} />
+                <Route path="projects" element={<HomeownerProjects />} />
+                <Route path="projects/new" element={<CreateProject />} />
+                <Route path="projects/:id" element={<ProjectDetail />} />
+              </Route>
 
-            {/* Provider routes */}
-            <Route
-              path="/provider"
-              element={
-                <RoleProtectedRoute allowedRoles={['provider']}>
-                  <ProviderLayout />
-                </RoleProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<ProviderDashboard />} />
-              <Route path="profile" element={<ProviderProfile />} />
-              <Route path="services" element={<ProviderServices />} />
-            </Route>
-          </Routes>
+              {/* Provider Routes */}
+              <Route
+                path="/provider"
+                element={
+                  <RoleProtectedRoute requiredRole="provider">
+                    <ProviderLayout />
+                  </RoleProtectedRoute>
+                }
+              >
+                <Route path="dashboard" element={<ProviderDashboard />} />
+                <Route path="jobs" element={<ProviderJobs />} />
+                <Route path="settings" element={<ProviderSettings />} />
+              </Route>
+            </Routes>
+          </AdminProvider>
         </AppProvider>
       </AuthProvider>
     </Router>

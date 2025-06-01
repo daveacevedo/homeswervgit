@@ -1,103 +1,174 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useApp } from '../../contexts/AppContext';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-const UserTypeSelection = () => {
+export default function UserTypeSelection() {
+  const { user } = useAuth();
+  const { userRoles, activeRole, switchRole, loading } = useApp();
+  const [selectedRole, setSelectedRole] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { user, updateUserProfile } = useAuth();
-  
-  const selectHomeowner = async () => {
-    try {
-      // Update user profile with user type
-      await updateUserProfile({
-        userType: 'homeowner'
-      });
-      
-      // Navigate to homeowner profile setup
-      navigate('/homeowner-profile-setup');
-    } catch (error) {
-      console.error('Error setting user type:', error);
-    }
-  };
-  
-  const selectProvider = async () => {
-    try {
-      // Update user profile with user type
-      await updateUserProfile({
-        userType: 'provider'
-      });
-      
-      // Navigate to provider profile setup
-      navigate('/provider-profile-setup');
-    } catch (error) {
-      console.error('Error setting user type:', error);
-    }
-  };
-  
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <img
-          className="mx-auto h-12 w-auto"
-          src="https://tailwindui.com/img/logos/workflow-mark-blue-600.svg"
-          alt="Home Swerv"
-        />
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Choose your account type
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Select how you want to use Home Swerv
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <div className="space-y-6">
-            <div 
-              onClick={selectHomeowner}
-              className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <div className="flex justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  useEffect(() => {
+    // If user already has an active role, redirect to appropriate dashboard
+    if (user && activeRole) {
+      redirectBasedOnRole(activeRole);
+    }
+    
+    // Set the first role as selected by default if available
+    if (userRoles.length > 0 && !selectedRole) {
+      setSelectedRole(userRoles[0]);
+    }
+  }, [user, activeRole, userRoles]);
+
+  const redirectBasedOnRole = (role) => {
+    if (role === 'admin') {
+      navigate('/admin/dashboard');
+    } else if (role === 'homeowner') {
+      navigate('/homeowner/dashboard');
+    } else if (role === 'provider') {
+      navigate('/provider/dashboard');
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!selectedRole) return;
+    
+    setIsSubmitting(true);
+    const success = await switchRole(selectedRole);
+    setIsSubmitting(false);
+    
+    if (success) {
+      redirectBasedOnRole(selectedRole);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Select Your Role
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Choose how you want to use Home Swerv
+          </p>
+        </div>
+        
+        {userRoles.length === 0 ? (
+          <div className="rounded-md bg-yellow-50 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="mt-2 block text-lg font-medium text-gray-900">
-                I'm a Homeowner
-              </span>
-              <p className="mt-1 text-sm text-gray-500">
-                Find trusted service providers for your home projects and maintenance needs.
-              </p>
-            </div>
-            
-            <div 
-              onClick={selectProvider}
-              className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <div className="flex justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  No roles assigned
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    You don't have any roles assigned yet. Please contact support for assistance.
+                  </p>
+                </div>
               </div>
-              <span className="mt-2 block text-lg font-medium text-gray-900">
-                I'm a Service Provider
-              </span>
-              <p className="mt-1 text-sm text-gray-500">
-                Connect with homeowners and grow your business with new clients.
-              </p>
-            </div>
-            
-            <div className="text-sm text-center mt-6">
-              <p className="text-gray-500">
-                You can always add another account type later from your profile settings.
-              </p>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {userRoles.includes('admin') && (
+                <div className="relative flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="admin"
+                      name="userType"
+                      type="radio"
+                      checked={selectedRole === 'admin'}
+                      onChange={() => setSelectedRole('admin')}
+                      className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="admin" className="font-medium text-gray-700">
+                      Administrator
+                    </label>
+                    <p className="text-gray-500">Manage the platform and users</p>
+                  </div>
+                </div>
+              )}
+              
+              {userRoles.includes('homeowner') && (
+                <div className="relative flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="homeowner"
+                      name="userType"
+                      type="radio"
+                      checked={selectedRole === 'homeowner'}
+                      onChange={() => setSelectedRole('homeowner')}
+                      className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="homeowner" className="font-medium text-gray-700">
+                      Homeowner
+                    </label>
+                    <p className="text-gray-500">Find and hire service providers for your home</p>
+                  </div>
+                </div>
+              )}
+              
+              {userRoles.includes('provider') && (
+                <div className="relative flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="provider"
+                      name="userType"
+                      type="radio"
+                      checked={selectedRole === 'provider'}
+                      onChange={() => setSelectedRole('provider')}
+                      className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="provider" className="font-medium text-gray-700">
+                      Service Provider
+                    </label>
+                    <p className="text-gray-500">Offer your services to homeowners</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={!selectedRole || isSubmitting}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400"
+              >
+                {isSubmitting ? (
+                  <LoadingSpinner size="small" color="white" />
+                ) : (
+                  'Continue'
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
-};
-
-export default UserTypeSelection;
+}

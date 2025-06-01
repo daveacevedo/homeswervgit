@@ -4,11 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 
 const RoleProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { activeRole, loading: appLoading } = useApp();
 
   // Show loading state if auth or app context is still loading
-  if (loading || appLoading) {
+  if (authLoading || appLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
